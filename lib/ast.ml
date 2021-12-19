@@ -42,7 +42,7 @@ and eval_stmt scope pstmt =
         id new_scope (eval_expr new_scope e) new_scope
         (eval_stmt_list new_scope sl)
         new_scope
-  | MacroStmt m -> Printf.sprintf "    %s \n" m
+  | MacroStmt m -> Printf.sprintf "%s \n" m
 
 and eval_expr scope pexpr =
   match pexpr with
