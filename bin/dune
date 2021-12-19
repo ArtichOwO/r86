@@ -1,0 +1,4 @@
+(executable
+ (public_name ArtiLang)
+ (name main)
+ (libraries ArtiLang core))

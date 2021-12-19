@@ -1,0 +1,12 @@
+
+// This is a near function
+
+%define truc 8098
+
+near truc(salut, machin) {
+    if 0xc0ffee {
+        if (123 == 78 /*hey*/) {
+            
+        }
+    }
+}
