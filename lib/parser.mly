@@ -17,6 +17,8 @@
 %token EQ NEQ
 %token NEAR FAR INT
 
+%token GLOBAL
+
 %token <string> STRING
 %token <string> LABEL
 %token <int> INTEGER
@@ -28,9 +30,9 @@
 program: e=defs*; EOF { e }
 
 defs:
-    | pt=function_type;lbl=label;LPAREN;args=argument*;RPAREN;
+    | ig=option(GLOBAL);pt=function_type;lbl=label;LPAREN;args=argument*;RPAREN;
       LBRACE;sl=stmt*;RBRACE 
-        { FuncDef (pt,lbl,args,sl) }
+        { FuncDef (ig,pt,lbl,args,sl) }
     | m=MACRO { MacroDef m }
 
 function_type:

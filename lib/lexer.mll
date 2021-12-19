@@ -23,6 +23,7 @@ rule translate = parse
   | "near" { NEAR }
   | "far" { FAR }
   | "int" { INT }
+  | "global" { GLOBAL }
   | "==" { EQ }
   | "!=" { NEQ }
   | ['0'-'9']+ as i { INTEGER (int_of_string i) }

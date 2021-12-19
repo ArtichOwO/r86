@@ -9,7 +9,7 @@ type program_string = {
 and program = defs list
 
 and defs =
-  | FuncDef of function_type * string * string list * stmt list
+  | FuncDef of unit option * function_type * string * string list * stmt list
   | MacroDef of string
 
 and label = string
@@ -108,9 +108,14 @@ let rec eval_program defs_list =
   |> concat_tree_string |> string_of_pstring
 
 and eval_defs = function
-  | FuncDef (pt, lbl, args, sl) -> (
+  | FuncDef (ig, pt, lbl, args, sl) -> (
       match pt with
       | Near ->
+          let is_global =
+            match ig with
+            | None -> ""
+            | Some _ -> Printf.sprintf "GLOBAL %s \n" lbl
+          in
           let func_string =
             Printf.sprintf
               "%s:\n\
@@ -123,5 +128,11 @@ and eval_defs = function
               \    ret\n"
               lbl (String.concat ", " args) (eval_stmt_list lbl sl)
           in
-          { header = ""; text = func_string; data = ""; rodata = ""; bss = "" })
+          {
+            header = is_global;
+            text = func_string;
+            data = "";
+            rodata = "";
+            bss = "";
+          })
   | MacroDef m -> { header = m; text = ""; data = ""; rodata = ""; bss = "" }

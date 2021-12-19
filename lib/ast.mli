@@ -9,7 +9,7 @@ type program_string = {
 and program = defs list
 
 and defs =
-  | FuncDef of function_type * string * string list * stmt list
+  | FuncDef of unit option * function_type * string * string list * stmt list
   | MacroDef of string
 
 and label = string
