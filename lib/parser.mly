@@ -31,7 +31,7 @@ defs:
     | pt=function_type;lbl=label;LPAREN;args=argument*;RPAREN;
       LBRACE;sl=stmt*;RBRACE 
         { FuncDef (pt,lbl,args,sl) }
-    | m=MACRO { Macro m }
+    | m=MACRO { MacroDef m }
 
 function_type:
     | NEAR { Near }
@@ -42,6 +42,7 @@ label: lbl=LABEL { lbl }
 
 stmt:
     | IF;i=expr;LBRACE;t=stmt*;RBRACE { If (i,t) }
+    | m=MACRO { MacroStmt m }
 
 expr:
     | LPAREN;lv=value;EQ;rv=value;RPAREN { Eq (lv,rv) }

@@ -10,11 +10,11 @@ and program = defs list
 
 and defs =
   | FuncDef of function_type * string * string list * stmt list
-  | Macro of string
+  | MacroDef of string
 
 and label = string
 
-and stmt = If of expr * stmt list
+and stmt = If of expr * stmt list | MacroStmt of string
 
 and expr = Value of value | Eq of value * value
 
@@ -42,6 +42,7 @@ and eval_stmt scope pstmt =
         id new_scope (eval_expr new_scope e) new_scope
         (eval_stmt_list new_scope sl)
         new_scope
+  | MacroStmt m -> Printf.sprintf "    %s \n" m
 
 and eval_expr scope pexpr =
   match pexpr with
@@ -123,4 +124,4 @@ and eval_defs = function
               lbl (String.concat ", " args) (eval_stmt_list lbl sl)
           in
           { header = ""; text = func_string; data = ""; rodata = ""; bss = "" })
-  | Macro m -> { header = m; text = ""; data = ""; rodata = ""; bss = "" }
+  | MacroDef m -> { header = m; text = ""; data = ""; rodata = ""; bss = "" }

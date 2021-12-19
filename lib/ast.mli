@@ -10,11 +10,11 @@ and program = defs list
 
 and defs =
   | FuncDef of function_type * string * string list * stmt list
-  | Macro of string
+  | MacroDef of string
 
 and label = string
 
-and stmt = If of expr * stmt list
+and stmt = If of expr * stmt list | MacroStmt of string
 
 and expr = Value of value | Eq of value * value
 
