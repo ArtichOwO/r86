@@ -9,7 +9,13 @@ type program_string = {
 and program = defs list
 
 and defs =
-  | FuncDef of unit option * function_type * string * string list * stmt list
+  | FuncDef of {
+      is_global : unit option;
+      ftype : function_type;
+      fname : string;
+      args : string list;
+      stmt_list : stmt list;
+    }
   | MacroDef of string
 
 and label = string
@@ -117,8 +123,8 @@ let rec eval_program defs_list =
   |> concat_tree_string |> string_of_pstring
 
 and eval_defs = function
-  | FuncDef (ig, pt, lbl, args, sl) -> (
-      match pt with
+  | FuncDef { is_global; ftype; fname; args; stmt_list } -> (
+      match ftype with
       | Near ->
           let rec create_arg_idx ~args_list ~index =
             if List.length args = index then args_list
@@ -127,10 +133,10 @@ and eval_defs = function
                 ~args_list:(args_list @ [ (List.nth args index, index) ])
                 ~index:(index + 1)
           in
-          let is_global =
-            match ig with
+          let ig =
+            match is_global with
             | None -> ""
-            | Some _ -> Printf.sprintf "GLOBAL %s \n" lbl
+            | Some _ -> Printf.sprintf "GLOBAL %s \n" fname
           in
           let func_string =
             Printf.sprintf
@@ -142,14 +148,10 @@ and eval_defs = function
                %s\n\n\
               \    pop bp\n\
               \    ret\n"
-              lbl (String.concat ", " args)
-              (eval_stmt_list lbl (create_arg_idx ~args_list:[] ~index:0) sl)
+              fname (String.concat ", " args)
+              (eval_stmt_list fname
+                 (create_arg_idx ~args_list:[] ~index:0)
+                 stmt_list)
           in
-          {
-            header = is_global;
-            text = func_string;
-            data = "";
-            rodata = "";
-            bss = "";
-          })
+          { header = ig; text = func_string; data = ""; rodata = ""; bss = "" })
   | MacroDef m -> { header = m; text = ""; data = ""; rodata = ""; bss = "" }

@@ -30,9 +30,9 @@
 program: e=defs*; EOF { e }
 
 defs:
-    | ig=option(GLOBAL);pt=function_type;lbl=label;LPAREN;args=argument*;RPAREN;
-      LBRACE;sl=stmt*;RBRACE 
-        { FuncDef (ig,pt,lbl,args,sl) }
+    | is_global=option(GLOBAL);ftype=function_type;fname=label;LPAREN;args=argument*;RPAREN;
+      LBRACE;stmt_list=stmt*;RBRACE 
+        { FuncDef { is_global; ftype; fname; args; stmt_list } }
     | m=MACRO { MacroDef m }
 
 function_type:
