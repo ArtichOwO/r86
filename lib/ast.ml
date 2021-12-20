@@ -121,7 +121,7 @@ and eval_defs = function
       match pt with
       | Near ->
           let rec create_arg_idx ~args_list ~index =
-            if List.length args == index then args_list
+            if List.length args = index then args_list
             else
               create_arg_idx
                 ~args_list:(args_list @ [ (List.nth args index, index) ])
