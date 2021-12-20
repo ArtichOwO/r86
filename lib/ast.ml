@@ -16,17 +16,19 @@ and label = string
 
 and stmt = If of expr * stmt list | MacroStmt of string
 
-and expr = Value of value | Eq of value * value
+and expr = Value of value | Eq of value * value | Variable of string
 
 and function_type = Near
 
 and value = Integer of int | String of string
 
-let rec eval_stmt_list scope stmt_list =
-  let eval_stmt_scope = eval_stmt scope in
+and arguments = string * int
+
+let rec eval_stmt_list scope var_list stmt_list =
+  let eval_stmt_scope = eval_stmt scope var_list in
   List.map eval_stmt_scope stmt_list |> String.concat ""
 
-and eval_stmt scope pstmt =
+and eval_stmt scope var_list pstmt =
   match pstmt with
   | If (e, sl) ->
       let id = Random.int 10000 in
@@ -39,12 +41,14 @@ and eval_stmt scope pstmt =
         \    jnz %s.end\n\n\
          %s\n\n\
         \    %s.end:\n\n"
-        id new_scope (eval_expr new_scope e) new_scope
-        (eval_stmt_list new_scope sl)
+        id new_scope
+        (eval_expr new_scope var_list e)
+        new_scope
+        (eval_stmt_list new_scope var_list sl)
         new_scope
   | MacroStmt m -> Printf.sprintf "%s \n" m
 
-and eval_expr scope pexpr =
+and eval_expr scope var_list pexpr =
   match pexpr with
   | Value v -> Printf.sprintf "mov ax, %s" (eval_value v)
   | Eq (lv, rv) ->
@@ -64,6 +68,11 @@ and eval_expr scope pexpr =
         \    %s.end:\n"
         id (eval_value lv) (eval_value rv) (eval_value lv) (eval_value rv)
         new_scope new_scope new_scope new_scope new_scope
+  | Variable var ->
+      if List.mem_assoc var var_list then
+        let offset = List.assoc var var_list in
+        Printf.sprintf "mov ax, [bp+%d]" ((offset * 2) + 4)
+      else Printf.sprintf "    mov ax, %s" var
 
 and eval_value = function Integer i -> string_of_int i | String s -> s
 
@@ -111,6 +120,13 @@ and eval_defs = function
   | FuncDef (ig, pt, lbl, args, sl) -> (
       match pt with
       | Near ->
+          let rec create_arg_idx ~args_list ~index =
+            if List.length args == index then args_list
+            else
+              create_arg_idx
+                ~args_list:(args_list @ [ (List.nth args index, index) ])
+                ~index:(index + 1)
+          in
           let is_global =
             match ig with
             | None -> ""
@@ -126,7 +142,8 @@ and eval_defs = function
                %s\n\n\
               \    pop bp\n\
               \    ret\n"
-              lbl (String.concat ", " args) (eval_stmt_list lbl sl)
+              lbl (String.concat ", " args)
+              (eval_stmt_list lbl (create_arg_idx ~args_list:[] ~index:0) sl)
           in
           {
             header = is_global;

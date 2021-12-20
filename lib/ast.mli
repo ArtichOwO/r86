@@ -16,20 +16,22 @@ and label = string
 
 and stmt = If of expr * stmt list | MacroStmt of string
 
-and expr = Value of value | Eq of value * value
+and expr = Value of value | Eq of value * value | Variable of string
 
 and function_type = Near
 
 and value = Integer of int | String of string
 
+and arguments = string * int
+
 val eval_program : defs list -> string
 
 val eval_defs : defs -> program_string
 
-val eval_stmt_list : string -> stmt list -> string
+val eval_stmt_list : string -> arguments list -> stmt list -> string
 
-val eval_stmt : string -> stmt -> string
+val eval_stmt : string -> arguments list -> stmt -> string
 
-val eval_expr : string -> expr -> string
+val eval_expr : string -> arguments list -> expr -> string
 
 val eval_value : value -> string
