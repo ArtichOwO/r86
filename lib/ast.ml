@@ -30,6 +30,10 @@ and value = Integer of int | String of string
 
 and arguments = string * int
 
+let create_prgrm_string ?(header = "") ?(text = "") ?(data = "") ?(rodata = "")
+    ?(bss = "") () =
+  { header; text; data; rodata; bss }
+
 let rec eval_stmt_list scope var_list stmt_list =
   let eval_stmt_scope = eval_stmt scope var_list in
   List.map eval_stmt_scope stmt_list |> String.concat ""
@@ -153,5 +157,5 @@ and eval_defs = function
                  (create_arg_idx ~args_list:[] ~index:0)
                  stmt_list)
           in
-          { header = ig; text = func_string; data = ""; rodata = ""; bss = "" })
+          create_prgrm_string ~header:ig ~text:func_string ())
   | MacroDef m -> { header = m; text = ""; data = ""; rodata = ""; bss = "" }
