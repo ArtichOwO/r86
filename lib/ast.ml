@@ -189,11 +189,13 @@ and eval_defs = function
         | None -> ""
         | Some _ -> Printf.sprintf "GLOBAL %s \n" sname
       in
-      let string_of_stype = match stype with Byte -> "db" | Word -> "dw" 
-      in
-      let string_of_value = match value with
+      let string_of_stype = match stype with Byte -> "db" | Word -> "dw" in
+      let string_of_value =
+        match value with
         | Integer i -> string_of_int i
         | String s -> Printf.sprintf "%s,0" s
       in
-      let svar_string = Printf.sprintf "%s %s %s \n" sname string_of_stype string_of_value in
+      let svar_string =
+        Printf.sprintf "%s %s %s \n" sname string_of_stype string_of_value
+      in
       create_prgrm_string ~header:ig ~data:svar_string ()
