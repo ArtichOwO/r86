@@ -10,7 +10,7 @@ and program = defs list
 
 and defs =
   | FuncDef of {
-      is_global : unit option;
+      is_global : bool;
       ftype : function_type;
       fname : string;
       args : string list;
@@ -18,12 +18,12 @@ and defs =
     }
   | MacroDef of string
   | StaticVarUninitialized of {
-      is_global : unit option;
+      is_global : bool;
       stype : static_type;
       sname : string;
     }
   | StaticVar of {
-      is_global : unit option;
+      is_global : bool;
       stype : static_type;
       sname : string;
       value : value;
@@ -152,9 +152,7 @@ and eval_defs = function
                 ~index:(index + 1)
           in
           let ig =
-            match is_global with
-            | None -> ""
-            | Some _ -> Printf.sprintf "GLOBAL %s \n" fname
+            if is_global then Printf.sprintf "GLOBAL %s \n" fname else ""
           in
           let func_string =
             Printf.sprintf
@@ -175,9 +173,7 @@ and eval_defs = function
   | MacroDef m -> { header = m; text = ""; data = ""; rodata = ""; bss = "" }
   | StaticVarUninitialized { is_global; stype; sname } ->
       let ig =
-        match is_global with
-        | None -> ""
-        | Some _ -> Printf.sprintf "GLOBAL %s \n" sname
+        if is_global then Printf.sprintf "GLOBAL %s \n" sname else ""
       in
       let string_of_stype =
         match stype with Byte -> "resb" | Word -> "resw"
@@ -186,9 +182,7 @@ and eval_defs = function
       create_prgrm_string ~header:ig ~bss:svar_string ()
   | StaticVar { is_global; stype; sname; value } ->
       let ig =
-        match is_global with
-        | None -> ""
-        | Some _ -> Printf.sprintf "GLOBAL %s \n" sname
+        if is_global then Printf.sprintf "GLOBAL %s \n" sname else ""
       in
       let string_of_stype = match stype with Byte -> "db" | Word -> "dw" in
       let string_of_value =

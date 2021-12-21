@@ -10,7 +10,7 @@ and program = defs list
 
 and defs =
   | FuncDef of {
-      is_global : unit option;
+      is_global : bool;
       ftype : function_type;
       fname : string;
       args : string list;
@@ -18,12 +18,12 @@ and defs =
     }
   | MacroDef of string
   | StaticVarUninitialized of {
-      is_global : unit option;
+      is_global : bool;
       stype : static_type;
       sname : string;
     }
   | StaticVar of {
-      is_global : unit option;
+      is_global : bool;
       stype : static_type;
       sname : string;
       value : value;

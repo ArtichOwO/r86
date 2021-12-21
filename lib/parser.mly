@@ -32,14 +32,17 @@
 program: e=defs*; EOF { e }
 
 defs:
-    | is_global=option(GLOBAL);ftype=function_type;fname=label;LPAREN;args=argument*;RPAREN;
+    | ig=option(GLOBAL);ftype=function_type;fname=label;LPAREN;args=argument*;RPAREN;
       LBRACE;stmt_list=stmt*;RBRACE 
-        { FuncDef { is_global; ftype; fname; args; stmt_list } }
+        { let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
+          FuncDef { is_global; ftype; fname; args; stmt_list } }
     | m=MACRO { MacroDef m }
-    | is_global=option(GLOBAL);stype=static_type;sname=label;SEMICOLON
-        { StaticVarUninitialized { is_global; stype; sname } }
-    | is_global=option(GLOBAL);stype=static_type;sname=label;ASSIGN;value=value;SEMICOLON
-        { StaticVar { is_global; stype; sname; value } }
+    | ig=option(GLOBAL);stype=static_type;sname=label;SEMICOLON
+        { let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
+          StaticVarUninitialized { is_global; stype; sname } }
+    | ig=option(GLOBAL);stype=static_type;sname=label;ASSIGN;value=value;SEMICOLON
+        { let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
+          StaticVar { is_global; stype; sname; value } }
     | EXTERN;externl=argument*;SEMICOLON { Extern externl }
 
 function_type:
