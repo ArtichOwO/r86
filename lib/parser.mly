@@ -19,7 +19,7 @@
 %token NEAR FAR INT
 %token BYTE WORD
 
-%token GLOBAL
+%token GLOBAL EXTERN
 
 %token <string> STRING
 %token <string> LABEL
@@ -40,6 +40,7 @@ defs:
         { StaticVarUninitialized { is_global; stype; sname } }
     | is_global=option(GLOBAL);stype=static_type;sname=label;ASSIGN;value=value;SEMICOLON
         { StaticVar { is_global; stype; sname; value } }
+    | EXTERN;externl=argument*;SEMICOLON { Extern externl }
 
 function_type:
     | NEAR { Near }

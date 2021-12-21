@@ -28,6 +28,7 @@ and defs =
       sname : string;
       value : value;
     }
+  | Extern of string list
 
 and label = string
 

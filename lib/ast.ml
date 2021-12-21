@@ -28,6 +28,7 @@ and defs =
       sname : string;
       value : value;
     }
+  | Extern of string list
 
 and label = string
 
@@ -199,3 +200,8 @@ and eval_defs = function
         Printf.sprintf "%s %s %s \n" sname string_of_stype string_of_value
       in
       create_prgrm_string ~header:ig ~data:svar_string ()
+  | Extern el ->
+      let extern_string =
+        Printf.sprintf "EXTERN %s \n" (String.concat ", " el)
+      in
+      create_prgrm_string ~header:extern_string ()

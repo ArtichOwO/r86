@@ -25,6 +25,7 @@ rule translate = parse
   | "far" { FAR }
   | "int" { INT }
   | "global" { GLOBAL }
+  | "extern" { EXTERN }
   | "byte" { BYTE }
   | "word" { WORD }
   | "==" { EQ }
