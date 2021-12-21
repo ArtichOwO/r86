@@ -17,6 +17,17 @@ and defs =
       stmt_list : stmt list;
     }
   | MacroDef of string
+  | StaticVarUninitialized of {
+      is_global : unit option;
+      stype : static_type;
+      sname : string;
+    }
+  | StaticVar of {
+      is_global : unit option;
+      stype : static_type;
+      sname : string;
+      value : value;
+    }
 
 and label = string
 
@@ -25,6 +36,8 @@ and stmt = If of expr * stmt list | MacroStmt of string
 and expr = Value of value | Eq of value * value | Variable of string
 
 and function_type = Near
+
+and static_type = Byte | Word
 
 and value = Integer of int | String of string
 
@@ -159,3 +172,28 @@ and eval_defs = function
           in
           create_prgrm_string ~header:ig ~text:func_string ())
   | MacroDef m -> { header = m; text = ""; data = ""; rodata = ""; bss = "" }
+  | StaticVarUninitialized { is_global; stype; sname } ->
+      let ig =
+        match is_global with
+        | None -> ""
+        | Some _ -> Printf.sprintf "GLOBAL %s \n" sname
+      in
+      let string_of_stype =
+        match stype with Byte -> "resb" | Word -> "resw"
+      in
+      let svar_string = Printf.sprintf "%s %s 1\n" sname string_of_stype in
+      create_prgrm_string ~header:ig ~bss:svar_string ()
+  | StaticVar { is_global; stype; sname; value } ->
+      let ig =
+        match is_global with
+        | None -> ""
+        | Some _ -> Printf.sprintf "GLOBAL %s \n" sname
+      in
+      let string_of_stype = match stype with Byte -> "db" | Word -> "dw" 
+      in
+      let string_of_value = match value with
+        | Integer i -> string_of_int i
+        | String s -> Printf.sprintf "%s,0" s
+      in
+      let svar_string = Printf.sprintf "%s %s %s \n" sname string_of_stype string_of_value in
+      create_prgrm_string ~header:ig ~data:svar_string ()

@@ -14,8 +14,10 @@
 %token FOR
 %token IF ELSE
 
+%token ASSIGN
 %token EQ NEQ
 %token NEAR FAR INT
+%token BYTE WORD
 
 %token GLOBAL
 
@@ -34,9 +36,17 @@ defs:
       LBRACE;stmt_list=stmt*;RBRACE 
         { FuncDef { is_global; ftype; fname; args; stmt_list } }
     | m=MACRO { MacroDef m }
+    | is_global=option(GLOBAL);stype=static_type;sname=label;SEMICOLON
+        { StaticVarUninitialized { is_global; stype; sname } }
+    | is_global=option(GLOBAL);stype=static_type;sname=label;ASSIGN;value=value;SEMICOLON
+        { StaticVar { is_global; stype; sname; value } }
 
 function_type:
     | NEAR { Near }
+
+static_type:
+    | BYTE { Byte }
+    | WORD { Word }
 
 argument: lbl=label;option(COMMA) { lbl }
 

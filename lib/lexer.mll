@@ -17,6 +17,7 @@ rule translate = parse
   | ')' { RPAREN }
   | '{' { LBRACE }
   | '}' { RBRACE }
+  | '=' { ASSIGN }
   | "for" { FOR }
   | "if" { IF }
   | "else" { ELSE }
@@ -24,6 +25,8 @@ rule translate = parse
   | "far" { FAR }
   | "int" { INT }
   | "global" { GLOBAL }
+  | "byte" { BYTE }
+  | "word" { WORD }
   | "==" { EQ }
   | "!=" { NEQ }
   | ['0'-'9']+ as i { INTEGER (int_of_string i) }
