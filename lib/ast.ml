@@ -172,18 +172,14 @@ and eval_defs = function
           create_prgrm_string ~header:ig ~text:func_string ())
   | MacroDef m -> { header = m; text = ""; data = ""; rodata = ""; bss = "" }
   | StaticVarUninitialized { is_global; stype; sname } ->
-      let ig =
-        if is_global then Printf.sprintf "GLOBAL %s \n" sname else ""
-      in
+      let ig = if is_global then Printf.sprintf "GLOBAL %s \n" sname else "" in
       let string_of_stype =
         match stype with Byte -> "resb" | Word -> "resw"
       in
       let svar_string = Printf.sprintf "%s %s 1\n" sname string_of_stype in
       create_prgrm_string ~header:ig ~bss:svar_string ()
   | StaticVar { is_global; stype; sname; value } ->
-      let ig =
-        if is_global then Printf.sprintf "GLOBAL %s \n" sname else ""
-      in
+      let ig = if is_global then Printf.sprintf "GLOBAL %s \n" sname else "" in
       let string_of_stype = match stype with Byte -> "db" | Word -> "dw" in
       let string_of_value =
         match value with
