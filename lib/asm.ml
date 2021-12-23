@@ -49,10 +49,10 @@ let concat_tree_string pstring_list =
     pstring_list
   |> unbuf
 
-let string_of_value_stmt ~value_string =
-  Printf.sprintf "mov ax, %s" value_string
+let string_of_value_stmt =
+  Printf.sprintf "mov ax, %s"
 
-let string_of_macro_stmt ~macro = Printf.sprintf "%s \n" macro
+let string_of_macro_stmt = Printf.sprintf "%s \n"
 
 let string_of_if ~scope ~expr ~stmt_list =
   let id = Random.int 10000 in
@@ -85,7 +85,7 @@ let string_of_eq ~scope ~left_value ~right_value =
     id left_value right_value left_value right_value new_scope new_scope
     new_scope new_scope new_scope
 
-let string_of_variable_stmt ~var ~var_list =
+let string_of_variable_stmt var var_list =
   if List.mem_assoc var var_list then
     let offset = List.assoc var var_list in
     Printf.sprintf "mov ax, [bp+%d]" ((offset * 2) + 4)
@@ -126,7 +126,7 @@ let pstring_of_staticvar ~is_global ~stype ~sname ~value =
   in
   create_prgrm_string ~header:ig ~data:svar_string ()
 
-let pstring_of_extern ~extern_list =
+let pstring_of_extern extern_list =
   let extern_string =
     Printf.sprintf "EXTERN %s \n" (String.concat ", " extern_list)
   in

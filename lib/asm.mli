@@ -15,9 +15,9 @@ val pstring_headers : program_string
 
 val concat_tree_string : program_string list -> program_string
 
-val string_of_value_stmt : value_string:string -> string
+val string_of_value_stmt : string -> string
 
-val string_of_macro_stmt : macro:string -> string
+val string_of_macro_stmt : string -> string
 
 val string_of_if : scope:string -> expr:string -> stmt_list:string -> string
 
@@ -25,7 +25,7 @@ val string_of_eq :
   scope:string -> left_value:string -> right_value:string -> string
 
 val string_of_variable_stmt :
-  var:string -> var_list:Ast_types.arguments list -> string
+  string -> Ast_types.arguments list -> string
 
 val pstring_of_near_funcdef :
   is_global:bool ->
@@ -47,4 +47,4 @@ val pstring_of_staticvar :
   value:Ast_types.value ->
   program_string
 
-val pstring_of_extern : extern_list:string list -> program_string
+val pstring_of_extern : string list -> program_string

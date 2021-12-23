@@ -10,15 +10,15 @@ and eval_stmt scope var_list pstmt =
       Asm.string_of_if ~scope
         ~expr:(eval_expr scope var_list e)
         ~stmt_list:(eval_stmt_list scope var_list sl)
-  | MacroStmt macro -> Asm.string_of_macro_stmt ~macro
+  | MacroStmt macro -> Asm.string_of_macro_stmt macro
 
 and eval_expr scope var_list pexpr =
   match pexpr with
-  | Value v -> Asm.string_of_value_stmt ~value_string:(eval_value v)
+  | Value v -> Asm.string_of_value_stmt @@ eval_value v
   | Eq (lv, rv) ->
       Asm.string_of_eq ~scope ~left_value:(eval_value lv)
         ~right_value:(eval_value rv)
-  | Variable var -> Asm.string_of_variable_stmt ~var ~var_list
+  | Variable var -> Asm.string_of_variable_stmt var var_list
 
 and eval_value = function Integer i -> string_of_int i | String s -> s
 
@@ -47,4 +47,4 @@ and eval_defs = function
       Asm.pstring_of_staticvaruninitialized ~is_global ~stype ~sname
   | StaticVar { is_global; stype; sname; value } ->
       Asm.pstring_of_staticvar ~is_global ~stype ~sname ~value
-  | Extern extern_list -> Asm.pstring_of_extern ~extern_list
+  | Extern extern_list -> Asm.pstring_of_extern extern_list
