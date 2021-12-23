@@ -24,8 +24,7 @@ val string_of_if : scope:string -> expr:string -> stmt_list:string -> string
 val string_of_eq :
   scope:string -> left_value:string -> right_value:string -> string
 
-val string_of_variable_stmt :
-  string -> Ast_types.arguments list -> string
+val string_of_variable_stmt : string -> Ast_types.arguments list -> string
 
 val pstring_of_near_funcdef :
   is_global:bool ->
