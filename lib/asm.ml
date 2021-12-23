@@ -49,16 +49,20 @@ let concat_tree_string pstring_list =
     pstring_list
   |> unbuf
 
-let string_of_value_stmt =
-  Printf.sprintf "mov ax, %s"
+let string_of_value_stmt = Printf.sprintf "mov ax, %s"
 
 let string_of_macro_stmt = Printf.sprintf "%s \n"
 
 let string_of_if ~scope ~expr ~stmt_list =
-  let id = Random.int 10000 in
-  let new_scope = Printf.sprintf "%s.if%d" scope id in
+  let replace_char = function '-' -> '_' | _ as c -> c in
+  let id =
+    Uuidm.v4_gen (Random.State.make_self_init ()) ()
+    |> Uuidm.to_string ~upper:true
+    |> String.map replace_char
+  in
+  let new_scope = Printf.sprintf "%s.if%s" scope id in
   Printf.sprintf
-    "    ; IF<%d>\n\
+    "    ; IF<%s>\n\
     \    %s:\n\n\
     \    %s\n\
     \    cmp ax, 0\n\
