@@ -1,5 +1,5 @@
 %{
-  open Ast
+  open Ast_types
 %}
 
 %token SEMICOLON

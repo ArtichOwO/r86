@@ -1,1 +1,1 @@
-val parse : Lexing.lexbuf -> (Ast.program, Log.msg) result
+val parse : Lexing.lexbuf -> (Ast_types.program, Log.msg) result
