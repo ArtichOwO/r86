@@ -64,8 +64,9 @@ expr:
     | LPAREN;lv=value;EQ;rv=value;RPAREN { Eq (lv,rv) }
     | v=value { Value v }
     | LPAREN;v=value;RPAREN { Value v }
-    | v=label { Variable v }
-    | LPAREN;v=label;RPAREN { Variable v }
+    | v=label { VariableStmt v }
+    | LPAREN;v=label;RPAREN { VariableStmt v }
 
 value:
     | i=INTEGER { Integer i }
+    | v=label { VariableValue v }

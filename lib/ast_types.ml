@@ -26,12 +26,12 @@ and label = string
 
 and stmt = If of expr * stmt list | MacroStmt of string
 
-and expr = Value of value | Eq of value * value | Variable of string
+and expr = Value of value | Eq of value * value | VariableStmt of string
 
 and function_type = Near
 
 and static_type = Byte | Word
 
-and value = Integer of int | String of string
+and value = Integer of int | String of string | VariableValue of string
 
 and arguments = string * int

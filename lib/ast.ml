@@ -14,13 +14,17 @@ and eval_stmt scope var_list pstmt =
 
 and eval_expr scope var_list pexpr =
   match pexpr with
-  | Value v -> Asm.string_of_value_stmt @@ eval_value v
+  | Value v -> Asm.string_of_value_stmt @@ eval_value v var_list
   | Eq (lv, rv) ->
-      Asm.string_of_eq ~scope ~left_value:(eval_value lv)
-        ~right_value:(eval_value rv)
-  | Variable var -> Asm.string_of_variable_stmt var var_list
+      Asm.string_of_eq ~scope ~left_value:(eval_value lv var_list)
+        ~right_value:(eval_value rv var_list)
+  | VariableStmt var -> Asm.string_of_variable_stmt var var_list
 
-and eval_value = function Integer i -> string_of_int i | String s -> s
+and eval_value value var_list =
+  match value with
+  | Integer i -> string_of_int i
+  | String s -> s
+  | VariableValue var -> Asm.string_of_variable_value var var_list
 
 let rec eval_program defs_list =
   Asm.pstring_headers :: List.map eval_defs defs_list

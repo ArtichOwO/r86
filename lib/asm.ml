@@ -8,6 +8,8 @@ type program_string = {
   bss : string;
 }
 
+(* PString *)
+
 let create_prgrm_string ?(header = "") ?(text = "") ?(data = "") ?(rodata = "")
     ?(bss = "") () =
   { header; text; data; rodata; bss }
@@ -49,6 +51,8 @@ let concat_tree_string pstring_list =
     pstring_list
   |> unbuf
 
+(* Statements *)
+
 let string_of_value_stmt = Printf.sprintf "mov ax, %s"
 
 let string_of_macro_stmt = Printf.sprintf "%s \n"
@@ -70,6 +74,8 @@ let string_of_if ~scope ~expr ~stmt_list =
      %s\n\n\
     \    %s.end:\n\n"
     id new_scope expr new_scope stmt_list new_scope
+
+(* Expressions *)
 
 let string_of_eq ~scope ~left_value ~right_value =
   let id = Random.int 10000 in
@@ -94,6 +100,16 @@ let string_of_variable_stmt var var_list =
     let offset = List.assoc var var_list in
     Printf.sprintf "mov ax, [bp+%d]" ((offset * 2) + 4)
   else Printf.sprintf "    mov ax, %s" var
+
+(* Values *)
+
+let string_of_variable_value var var_list =
+  if List.mem_assoc var var_list then
+    let offset = List.assoc var var_list in
+    Printf.sprintf "[bp+%d]" ((offset * 2) + 4)
+  else Printf.sprintf "%s" var
+
+(* Definitions *)
 
 let pstring_of_near_funcdef ~is_global ~fname ~args ~stmt_list =
   let ig = if is_global then Printf.sprintf "GLOBAL %s \n" fname else "" in
@@ -124,6 +140,7 @@ let pstring_of_staticvar ~is_global ~stype ~sname ~value =
     match value with
     | Integer i -> string_of_int i
     | String s -> Printf.sprintf "%s,0" s
+    | VariableValue var -> var
   in
   let svar_string =
     Printf.sprintf "%s %s %s\n" sname string_of_stype string_of_value

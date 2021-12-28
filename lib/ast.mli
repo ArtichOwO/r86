@@ -10,4 +10,4 @@ val eval_stmt : string -> arguments list -> stmt -> string
 
 val eval_expr : string -> arguments list -> expr -> string
 
-val eval_value : value -> string
+val eval_value : value -> arguments list -> string
