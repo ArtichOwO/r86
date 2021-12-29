@@ -50,5 +50,6 @@ and eval_defs = function
   | StaticVarUninitialized { is_global; stype; sname } ->
       Asm.pstring_of_staticvaruninitialized ~is_global ~stype ~sname
   | StaticVar { is_global; stype; sname; value } ->
-      Asm.pstring_of_staticvar ~is_global ~stype ~sname ~value
+      Asm.pstring_of_staticvar ~is_global ~stype ~sname
+        ~value:(eval_value value)
   | Extern extern_list -> Asm.pstring_of_extern extern_list

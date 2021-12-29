@@ -55,7 +55,7 @@ val pstring_of_staticvar :
   is_global:bool ->
   stype:Ast_types.static_type ->
   sname:string ->
-  value:Ast_types.value ->
+  value:string ->
   program_string
 
 val pstring_of_extern : string list -> program_string

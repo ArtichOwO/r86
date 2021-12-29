@@ -136,14 +136,8 @@ let pstring_of_staticvaruninitialized ~is_global ~stype ~sname =
 let pstring_of_staticvar ~is_global ~stype ~sname ~value =
   let ig = if is_global then Printf.sprintf "GLOBAL %s \n" sname else "" in
   let string_of_stype = match stype with Byte -> "db" | Word -> "dw" in
-  let string_of_value =
-    match value with
-    | Integer i -> string_of_int i
-    | String s -> Printf.sprintf "%s,0" s
-    | VariableValue var -> var
-  in
   let svar_string =
-    Printf.sprintf "%s %s %s\n" sname string_of_stype string_of_value
+    Printf.sprintf "%s %s %s\n" sname string_of_stype value
   in
   create_prgrm_string ~header:ig ~data:svar_string ()
 
