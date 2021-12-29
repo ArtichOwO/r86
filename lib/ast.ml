@@ -18,7 +18,9 @@ and eval_expr scope var_list pexpr =
   | Eq (lv, rv) ->
       Asm.string_of_eq ~scope ~left_value:(eval_value lv var_list)
         ~right_value:(eval_value rv var_list)
-  | VariableStmt var -> Asm.string_of_variable_stmt var var_list
+  | VariableExpr var -> Asm.string_of_variable_expr var var_list
+  | SubscriptExpr (addr, offset) ->
+      Asm.string_of_subscript_expr (eval_value addr var_list) offset var_list
 
 and eval_value value var_list =
   match value with

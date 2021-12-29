@@ -10,6 +10,7 @@
 
 %token LPAREN RPAREN
 %token LBRACE RBRACE
+%token LBRACK RBRACK
 
 %token FOR
 %token IF ELSE
@@ -64,9 +65,14 @@ expr:
     | LPAREN;lv=value;EQ;rv=value;RPAREN { Eq (lv,rv) }
     | v=value { Value v }
     | LPAREN;v=value;RPAREN { Value v }
-    | v=label { VariableStmt v }
-    | LPAREN;v=label;RPAREN { VariableStmt v }
+    | v=label { VariableExpr v }
+    | LPAREN;v=label;RPAREN { VariableExpr v }
+    | address=value;LBRACK;offset=address_value;RBRACK { SubscriptExpr (address,offset) }
 
 value:
     | i=INTEGER { Integer i }
     | v=label { VariableValue v }
+
+address_value:
+    | i=INTEGER { IntegerAddress i }
+    | v=label { VariableAddress v }

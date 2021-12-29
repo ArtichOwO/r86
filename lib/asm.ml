@@ -51,6 +51,14 @@ let concat_tree_string pstring_list =
     pstring_list
   |> unbuf
 
+(* Values *)
+
+let string_of_variable_value var var_list =
+  if List.mem_assoc var var_list then
+    let offset = List.assoc var var_list in
+    Printf.sprintf "[bp+%d]" ((offset * 2) + 4)
+  else Printf.sprintf "%s" var
+
 (* Statements *)
 
 let string_of_value_stmt = Printf.sprintf "mov ax, %s"
@@ -95,19 +103,18 @@ let string_of_eq ~scope ~left_value ~right_value =
     id left_value right_value left_value right_value new_scope new_scope
     new_scope new_scope new_scope
 
-let string_of_variable_stmt var var_list =
+let string_of_variable_expr var var_list =
   if List.mem_assoc var var_list then
     let offset = List.assoc var var_list in
     Printf.sprintf "mov ax, [bp+%d]" ((offset * 2) + 4)
   else Printf.sprintf "    mov ax, %s" var
 
-(* Values *)
-
-let string_of_variable_value var var_list =
-  if List.mem_assoc var var_list then
-    let offset = List.assoc var var_list in
-    Printf.sprintf "[bp+%d]" ((offset * 2) + 4)
-  else Printf.sprintf "%s" var
+let string_of_subscript_expr addr offset var_list =
+  match offset with
+  | IntegerAddress i -> Printf.sprintf "mov si, %s\n    mov ax, [si+%i]" addr i
+  | VariableAddress v ->
+      Printf.sprintf "mov si, %s\n    mov bx, %s \n    mov ax, [si+bx]" addr
+        (string_of_variable_value v var_list)
 
 (* Definitions *)
 
@@ -136,9 +143,7 @@ let pstring_of_staticvaruninitialized ~is_global ~stype ~sname =
 let pstring_of_staticvar ~is_global ~stype ~sname ~value =
   let ig = if is_global then Printf.sprintf "GLOBAL %s \n" sname else "" in
   let string_of_stype = match stype with Byte -> "db" | Word -> "dw" in
-  let svar_string =
-    Printf.sprintf "%s %s %s\n" sname string_of_stype value
-  in
+  let svar_string = Printf.sprintf "%s %s %s\n" sname string_of_stype value in
   create_prgrm_string ~header:ig ~data:svar_string ()
 
 let pstring_of_extern extern_list =

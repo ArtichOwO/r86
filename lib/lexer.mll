@@ -18,6 +18,8 @@ rule translate = parse
   | '{' { LBRACE }
   | '}' { RBRACE }
   | '=' { ASSIGN }
+  | '[' { LBRACK }
+  | ']' { RBRACK }
   | "for" { FOR }
   | "if" { IF }
   | "else" { ELSE }
