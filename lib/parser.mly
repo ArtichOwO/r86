@@ -12,6 +12,8 @@
 %token LBRACE RBRACE
 %token LBRACK RBRACK
 
+%token ASTERISK
+
 %token FOR
 %token IF ELSE
 
@@ -68,6 +70,7 @@ expr:
     | v=label { VariableExpr v }
     | LPAREN;v=label;RPAREN { VariableExpr v }
     | address=value;LBRACK;offset=address_value;RBRACK { SubscriptExpr (address,offset) }
+    | ASTERISK;address=value { SubscriptExpr (address,(IntegerAddress 0)) }
 
 value:
     | i=INTEGER { Integer i }

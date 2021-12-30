@@ -20,6 +20,7 @@ rule translate = parse
   | '=' { ASSIGN }
   | '[' { LBRACK }
   | ']' { RBRACK }
+  | '*' { ASTERISK }
   | "for" { FOR }
   | "if" { IF }
   | "else" { ELSE }
