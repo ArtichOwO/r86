@@ -1,6 +1,5 @@
 {
   open Parser
-  exception Syntax_error of char * Lexing.lexbuf
 }
 
 let newline = '\n' | "\r\n"
@@ -37,4 +36,4 @@ rule translate = parse
   | "0x" ['0'-'9' 'a'-'f' 'A'-'F']+ as i { INTEGER (int_of_string i) }
   | ['0'-'9' 'a'-'z' 'A'-'Z' '_']+ as str { LABEL str }
   | [' ' '\t'] { translate lexbuf }
-  | _ as c { raise (Syntax_error (c,lexbuf)) }
+  | _ as c { raise (Exceptions.Syntax_error (c,lexbuf)) }

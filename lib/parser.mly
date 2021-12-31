@@ -79,7 +79,8 @@ offset_value:
     | v=label { VariableOffset v }
 
 address_value:
-    | i=INTEGER { IntegerAddress ((Int.shift_right i 16),(Int.logand i 0xFFFF)) }
+    | i=INTEGER { if i > 0xFFFFFFFF then raise Exceptions.Pointer_overflow;
+                  IntegerAddress ((Int.shift_right i 16),(Int.logand i 0xFFFF)) }
     | v=label { VariableAddress v }
 
 static_value:
