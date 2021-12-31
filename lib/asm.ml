@@ -72,18 +72,19 @@ let string_of_subscript addr offset var_list =
   match offset with
   | IntegerOffset i ->
       Printf.sprintf
-        ";SUBSCRIPT\n\
+        "; SUBSCRIPT\n\
         \    %s\n\
         \    mov si, ax\n\
         \    mov ax, [es:si+0x%x]\n\
-        \    ;END SUBSCRIPT" str_ptr i
+        \    ; END SUBSCRIPT" str_ptr i
   | VariableOffset v ->
       Printf.sprintf
-        ";SUBSCRIPT\n\
+        "; SUBSCRIPT\n\
         \    %s\n\
         \    mov si, ax\n\
         \    mov bx, %s\n\
-        \    mov ax, [es:si+bx]    ;END SUBSCRIPT" str_ptr
+        \    mov ax, [es:si+bx]\n\
+        \    ; END SUBSCRIPT" str_ptr
         (string_of_variable v var_list)
 
 let string_of_static_value = function
