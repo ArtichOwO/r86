@@ -53,15 +53,33 @@ let concat_tree_string pstring_list =
 
 (* Values *)
 
-let string_of_variable_value var var_list =
+let string_of_integer = Printf.sprintf "mov ax, %d"
+
+let string_of_variable var var_list =
   if List.mem_assoc var var_list then
     let offset = List.assoc var var_list in
-    Printf.sprintf "[bp+%d]" ((offset * 2) + 4)
-  else Printf.sprintf "%s" var
+    Printf.sprintf "mov ax, [bp+%d]" ((offset * 2) + 4)
+  else Printf.sprintf "mov ax, %s" var
+
+let string_of_subscript addr offset var_list =
+  match offset with
+  | IntegerAddress i ->
+      Printf.sprintf
+        ";SUBSCRIPT\n\
+        \    %s\n\
+        \    mov si, ax\n\
+        \    mov ax, [si+%i]\n\
+        \    ;END SUBSCRIPT" addr i
+  | VariableAddress v ->
+      Printf.sprintf
+        ";SUBSCRIPT\n\
+        \    %s\n\
+        \    mov si, ax\n\
+        \    mov bx, %s\n\
+        \    mov ax, [si+bx]    ;END SUBSCRIPT" addr
+        (string_of_variable v var_list)
 
 (* Statements *)
-
-let string_of_value_stmt = Printf.sprintf "mov ax, %s"
 
 let string_of_macro_stmt = Printf.sprintf "%s \n"
 
@@ -89,9 +107,10 @@ let string_of_eq ~scope ~left_value ~right_value =
   let id = Random.int 10000 in
   let new_scope = Printf.sprintf "%s.eq%d" scope id in
   Printf.sprintf
-    "; EQ<%d> %s %s\n\
-    \    mov bx, %s\n\
-    \    mov ax, %s\n\
+    "; EQ<%d>\n\
+    \    %s\n\
+    \    mov bx, ax\n\
+    \    %s\n\
     \    cmp bx, ax\n\
     \    jne %s.false\n\
     \    %s.true:\n\
@@ -100,21 +119,7 @@ let string_of_eq ~scope ~left_value ~right_value =
     \    %s.false:\n\
     \    mov ax, 0\n\
     \    %s.end:\n"
-    id left_value right_value left_value right_value new_scope new_scope
-    new_scope new_scope new_scope
-
-let string_of_variable_expr var var_list =
-  if List.mem_assoc var var_list then
-    let offset = List.assoc var var_list in
-    Printf.sprintf "mov ax, [bp+%d]" ((offset * 2) + 4)
-  else Printf.sprintf "    mov ax, %s" var
-
-let string_of_subscript_expr addr offset var_list =
-  match offset with
-  | IntegerAddress i -> Printf.sprintf "mov si, %s\n    mov ax, [si+%i]" addr i
-  | VariableAddress v ->
-      Printf.sprintf "mov si, %s\n    mov bx, %s \n    mov ax, [si+bx]" addr
-        (string_of_variable_value v var_list)
+    id left_value right_value new_scope new_scope new_scope new_scope new_scope
 
 (* Definitions *)
 

@@ -17,9 +17,16 @@ val pstring_headers : program_string
 
 val concat_tree_string : program_string list -> program_string
 
-(* Statements *)
+(* Values *)
 
-val string_of_value_stmt : string -> string
+val string_of_integer : int -> string
+
+val string_of_variable : string -> Ast_types.arguments list -> string
+
+val string_of_subscript :
+  string -> Ast_types.address_value -> Ast_types.arguments list -> string
+
+(* Statements *)
 
 val string_of_macro_stmt : string -> string
 
@@ -29,15 +36,6 @@ val string_of_if : scope:string -> expr:string -> stmt_list:string -> string
 
 val string_of_eq :
   scope:string -> left_value:string -> right_value:string -> string
-
-val string_of_variable_expr : string -> Ast_types.arguments list -> string
-
-val string_of_subscript_expr :
-  string -> Ast_types.address_value -> Ast_types.arguments list -> string
-
-(* Values *)
-
-val string_of_variable_value : string -> Ast_types.arguments list -> string
 
 (* Definitions *)
 

@@ -67,14 +67,12 @@ expr:
     | LPAREN;lv=value;EQ;rv=value;RPAREN { Eq (lv,rv) }
     | v=value { Value v }
     | LPAREN;v=value;RPAREN { Value v }
-    | v=label { VariableExpr v }
-    | LPAREN;v=label;RPAREN { VariableExpr v }
-    | address=value;LBRACK;offset=address_value;RBRACK { SubscriptExpr (address,offset) }
-    | ASTERISK;address=value { SubscriptExpr (address,(IntegerAddress 0)) }
 
 value:
     | i=INTEGER { Integer i }
-    | v=label { VariableValue v }
+    | v=label { Variable v }
+    | address=value;LBRACK;offset=address_value;RBRACK { Subscript (address,offset) }
+    | ASTERISK;address=value { Subscript (address,(IntegerAddress 0)) }
 
 address_value:
     | i=INTEGER { IntegerAddress i }
