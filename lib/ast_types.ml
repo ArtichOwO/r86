@@ -18,7 +18,7 @@ and defs =
       is_global : bool;
       stype : static_type;
       sname : string;
-      value : value;
+      value : static_value;
     }
   | Extern of string list
 
@@ -35,8 +35,12 @@ and static_type = Byte | Word
 and value =
   | Integer of int
   | Variable of string
-  | Subscript of value * address_value
+  | Subscript of address_value * offset_value
 
-and address_value = IntegerAddress of int | VariableAddress of string
+and offset_value = IntegerOffset of int | VariableOffset of string
+
+and address_value = IntegerAddress of int * int | VariableAddress of string
+
+and static_value = StaticInteger of int | StaticString of string
 
 and arguments = string * int

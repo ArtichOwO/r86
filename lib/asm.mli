@@ -23,8 +23,16 @@ val string_of_integer : int -> string
 
 val string_of_variable : string -> Ast_types.arguments list -> string
 
+val string_of_pointer :
+  Ast_types.address_value -> Ast_types.arguments list -> string
+
 val string_of_subscript :
-  string -> Ast_types.address_value -> Ast_types.arguments list -> string
+  Ast_types.address_value ->
+  Ast_types.offset_value ->
+  Ast_types.arguments list ->
+  string
+
+val string_of_static_value : Ast_types.static_value -> string
 
 (* Statements *)
 

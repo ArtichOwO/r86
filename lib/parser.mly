@@ -43,7 +43,7 @@ defs:
     | ig=option(GLOBAL);stype=static_type;sname=label;SEMICOLON
         { let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
           StaticVarUninitialized { is_global; stype; sname } }
-    | ig=option(GLOBAL);stype=static_type;sname=label;ASSIGN;value=value;SEMICOLON
+    | ig=option(GLOBAL);stype=static_type;sname=label;ASSIGN;value=static_value;SEMICOLON
         { let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
           StaticVar { is_global; stype; sname; value } }
     | EXTERN;externl=argument*;SEMICOLON { Extern externl }
@@ -71,9 +71,16 @@ expr:
 value:
     | i=INTEGER { Integer i }
     | v=label { Variable v }
-    | address=value;LBRACK;offset=address_value;RBRACK { Subscript (address,offset) }
-    | ASTERISK;address=value { Subscript (address,(IntegerAddress 0)) }
+    | address=address_value;LBRACK;offset=offset_value;RBRACK { Subscript (address,offset) }
+    | ASTERISK;address=address_value { Subscript (address,(IntegerOffset 0)) }
+
+offset_value:
+    | i=INTEGER { IntegerOffset i }
+    | v=label { VariableOffset v }
 
 address_value:
-    | i=INTEGER { IntegerAddress i }
+    | i=INTEGER { IntegerAddress ((Int.shift_right i 16),(Int.logand i 0xFFFF)) }
     | v=label { VariableAddress v }
+
+static_value:
+    | i=INTEGER { StaticInteger i }
