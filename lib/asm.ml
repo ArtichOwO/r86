@@ -58,13 +58,13 @@ let string_of_integer = Printf.sprintf "mov ax, %d"
 let string_of_variable var var_list =
   if List.mem_assoc var var_list then
     let offset = List.assoc var var_list in
-    Printf.sprintf "mov ax, [bp+%d]" ((offset * 2) + 4)
+    Printf.sprintf "mov ax, [bp+Ox%x]" ((offset * 2) + 4)
   else Printf.sprintf "mov ax, %s" var
 
 let string_of_pointer var var_list =
   match var with
   | IntegerAddress (s, o) ->
-      Printf.sprintf "mov ax, %i\n    mov es, ax\n    mov ax, %i" s o
+      Printf.sprintf "mov ax, Ox%x\n    mov es, ax\n    mov ax, Ox%x" s o
   | VariableAddress v -> string_of_variable v var_list
 
 let string_of_subscript addr offset var_list =
@@ -75,7 +75,7 @@ let string_of_subscript addr offset var_list =
         ";SUBSCRIPT\n\
         \    %s\n\
         \    mov si, ax\n\
-        \    mov ax, [es:si+%i]\n\
+        \    mov ax, [es:si+Ox%x]\n\
         \    ;END SUBSCRIPT" str_ptr i
   | VariableOffset v ->
       Printf.sprintf
@@ -87,7 +87,7 @@ let string_of_subscript addr offset var_list =
         (string_of_variable v var_list)
 
 let string_of_static_value = function
-  | StaticInteger i -> string_of_int i
+  | StaticInteger i -> Printf.sprintf "Ox%x" i
   | StaticString s -> Printf.sprintf "%s,0" s
 
 (* Statements *)
