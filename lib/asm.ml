@@ -95,8 +95,8 @@ let string_of_static_value = function
 let string_of_macro_stmt = Printf.sprintf "%s \n"
 
 let string_of_if ~scope ~expr ~stmt_list =
-  let replace_char = function '-' -> '_' | _ as c -> c in
   let id =
+    let replace_char = function '-' -> '_' | _ as c -> c in
     Uuidm.v4_gen (Random.State.make_self_init ()) ()
     |> Uuidm.to_string ~upper:true
     |> String.map replace_char
@@ -115,10 +115,15 @@ let string_of_if ~scope ~expr ~stmt_list =
 (* Expressions *)
 
 let string_of_eq ~scope ~left_value ~right_value =
-  let id = Random.int 10000 in
-  let new_scope = Printf.sprintf "%s.eq%d" scope id in
+  let id =
+    let replace_char = function '-' -> '_' | _ as c -> c in
+    Uuidm.v4_gen (Random.State.make_self_init ()) ()
+    |> Uuidm.to_string ~upper:true
+    |> String.map replace_char
+  in
+  let new_scope = Printf.sprintf "%s.eq%s" scope id in
   Printf.sprintf
-    "; EQ<%d>\n\
+    "; EQ<%s>\n\
     \    %s\n\
     \    mov bx, ax\n\
     \    %s\n\
