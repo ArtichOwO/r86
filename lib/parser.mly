@@ -44,7 +44,17 @@ defs:
         { let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
           StaticVarUninitialized { is_global; stype; sname } }
     | ig=option(GLOBAL);stype=static_type;sname=label;ASSIGN;value=static_value;SEMICOLON
-        { let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
+        { begin match value with
+            | StaticInteger i ->
+                (match stype with
+                | Byte -> if i > 0xFF then raise Exceptions.Integer_overflow
+                | Word -> if i > 0xFFFF then raise Exceptions.Integer_overflow)
+            | StaticString _ -> 
+                (match stype with
+                | Word -> raise Exceptions.String_as_words
+                | _ -> ())
+          end;
+          let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
           StaticVar { is_global; stype; sname; value } }
     | EXTERN;externl=argument*;SEMICOLON { Extern externl }
 

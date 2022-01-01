@@ -1,4 +1,7 @@
 open Log
+open Exceptions
+
+type line_info = { line : string; linenb : int; colnb : int }
 
 let get_line filename line_nb =
   let ic = open_in filename in
@@ -7,7 +10,7 @@ let get_line filename line_nb =
   done;
   input_line ic
 
-let error_msg ~msg ~line ~linenb ~colnb =
+let error_msg ~msg { line; linenb; colnb } =
   let rec repeat_string s n =
     if n = 0 then "" else s ^ repeat_string s (n - 1)
   in
@@ -15,24 +18,25 @@ let error_msg ~msg ~line ~linenb ~colnb =
     (Printf.sprintf "%d:%d:%s \n╮ %s  \n╰─%s╯" linenb colnb msg (line |> cyan)
        (colnb - 1 |> repeat_string "─"))
 
+let create_line_info ~filename ~pos_lnum ~pos_cnum ~pos_bol =
+  {
+    line = get_line filename pos_lnum;
+    linenb = pos_lnum;
+    colnb = pos_cnum - pos_bol;
+  }
+
 let parse lexbuf =
-  try Ok (Parser.program Lexer.translate lexbuf) with
-  | Exceptions.Syntax_error (c, { lex_curr_p; _ }) ->
-      Result.error
-      @@ error_msg
-           ~msg:(Printf.sprintf "Invalid character `%c`" c)
-           ~line:(get_line Sys.argv.(1) lexbuf.lex_curr_p.pos_lnum)
-           ~linenb:lex_curr_p.pos_lnum
-           ~colnb:(lex_curr_p.pos_cnum - lex_curr_p.pos_bol)
-  | Parser.Error ->
-      let colnb = lexbuf.lex_curr_p.pos_cnum - lexbuf.lex_curr_p.pos_bol in
-      Result.error
-      @@ error_msg ~msg:"Syntax error"
-           ~line:(get_line Sys.argv.(1) lexbuf.lex_curr_p.pos_lnum)
-           ~linenb:lexbuf.lex_curr_p.pos_lnum ~colnb
-  | Exceptions.Pointer_overflow ->
-      let colnb = lexbuf.lex_curr_p.pos_cnum - lexbuf.lex_curr_p.pos_bol in
-      Result.error
-      @@ error_msg ~msg:"Pointer value overflow"
-           ~line:(get_line Sys.argv.(1) lexbuf.lex_curr_p.pos_lnum)
-           ~linenb:lexbuf.lex_curr_p.pos_lnum ~colnb
+  let filename = Sys.argv.(1) in
+  try Ok (Parser.program Lexer.translate lexbuf)
+  with _ as error ->
+    Result.error
+    @@ error_msg
+         ~msg:
+           (match error with
+           | Syntax_error c -> Printf.sprintf "Invalid character `%c`" c
+           | Parser.Error -> "Syntax error"
+           | Pointer_overflow -> "Pointer value overflow"
+           | Integer_overflow -> "Integer overflow"
+           | _ as other -> raise other)
+    @@ create_line_info ~filename ~pos_lnum:lexbuf.lex_curr_p.pos_lnum
+         ~pos_cnum:lexbuf.lex_curr_p.pos_cnum ~pos_bol:lexbuf.lex_curr_p.pos_bol
