@@ -5,6 +5,10 @@
 }
 
 let newline = '\n' | "\r\n"
+let whitespace = [' ' '\t']
+let dec_digit = ['0'-'9']
+let hex_digit = ['0'-'9' 'a'-'f' 'A'-'F']
+let id_char = ['0'-'9' 'a'-'z' 'A'-'Z' '_']
 
 rule translate = parse
   | eof { EOF }
@@ -35,10 +39,10 @@ rule translate = parse
   | "word" { WORD }
   | "==" { EQ }
   | "!=" { NEQ }
-  | ['0'-'9']+ as i { INTEGER (int_of_string i) }
-  | "0x" ['0'-'9' 'a'-'f' 'A'-'F']+ as i { INTEGER (int_of_string i) }
-  | ['0'-'9' 'a'-'z' 'A'-'Z' '_']+ as str { LABEL str }
-  | [' ' '\t'] { translate lexbuf }
+  | dec_digit+ as i { INTEGER (int_of_string i) }
+  | "0x" hex_digit+ as i { INTEGER (int_of_string i) }
+  | id_char+ as str { LABEL str }
+  | whitespace { translate lexbuf }
   | _ as c { raise @@ Exceptions.Invalid_character c }
 
 and read_string = parse
@@ -61,7 +65,7 @@ and special_char = parse
   | _ as c { raise @@ Exceptions.Invalid_character c }
 
 and get_int_value = parse
-  | ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] as i { Printf.sprintf "0x%s" i |> int_of_string |> Char.chr }
+  | hex_digit hex_digit as i { Printf.sprintf "0x%s" i |> int_of_string |> Char.chr }
   | _ { raise @@ Exceptions.Invalid_character (get_next_char lexbuf) }
 
 and get_next_char = parse _ as c { c }
