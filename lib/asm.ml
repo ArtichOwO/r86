@@ -89,7 +89,22 @@ let string_of_subscript addr offset var_list =
 
 let string_of_static_value = function
   | StaticInteger i -> Printf.sprintf "0x%x" i
-  | StaticString s -> Printf.sprintf "%s,0" s
+  | StaticString s ->
+      let explode s = List.init (String.length s) (String.get s) in
+      let convert_char c others = 
+        let new_char =
+        begin match c with
+          | '\n' -> "\",0x0A,\""
+          | '\r' -> "\",0x0D,\""
+          | '\b' -> "\",0x08,\""
+          | '\t' -> "\",0x09,\""
+          | '\x00' -> "\",0,\""
+          | _ as c -> Printf.sprintf "%c" c
+        end in
+        new_char ^ others
+      in
+      let new_string = List.fold_right convert_char (explode s) "" in
+      Printf.sprintf "\"%s\",0" new_string
 
 (* Statements *)
 

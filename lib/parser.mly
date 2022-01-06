@@ -95,3 +95,4 @@ address_value:
 
 static_value:
     | i=INTEGER { StaticInteger i }
+    | s=STRING { StaticString s }

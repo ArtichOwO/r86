@@ -33,7 +33,7 @@ let parse lexbuf =
     @@ error_msg
          ~msg:
            (match error with
-           | Syntax_error c -> Printf.sprintf "Invalid character `%c`" c
+           | Invalid_character c -> Printf.sprintf "Invalid character `%c`" c
            | Parser.Error -> "Syntax error"
            | Pointer_overflow -> "Pointer value overflow"
            | Integer_overflow -> "Integer overflow"

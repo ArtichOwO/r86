@@ -1,6 +1,8 @@
 (* Lexing errors *)
 
-exception Syntax_error of char
+exception Invalid_character of char
+
+exception String_never_terminated
 
 (* Parsing errors *)
 
