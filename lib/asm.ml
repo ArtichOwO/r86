@@ -53,39 +53,54 @@ let concat_tree_string pstring_list =
 
 (* Values *)
 
-let string_of_integer = Printf.sprintf "mov ax, %d"
+let pstring_of_integer i =
+  let text = Printf.sprintf "    mov ax, %d" i in
+  [ create_prgrm_string ~text () ]
 
-let string_of_variable var var_list =
-  if List.mem_assoc var var_list then
-    let offset = List.assoc var var_list in
-    Printf.sprintf "mov ax, [bp+0x%x]" ((offset * 2) + 4)
-  else Printf.sprintf "mov ax, %s" var
+let pstring_of_variable var var_list =
+  let text =
+    if List.mem_assoc var var_list then
+      let offset = List.assoc var var_list in
+      Printf.sprintf "    mov ax, [bp+0x%x]" ((offset * 2) + 4)
+    else Printf.sprintf "    mov ax, %s" var
+  in
+  [ create_prgrm_string ~text () ]
 
-let string_of_pointer var var_list =
+let pstring_of_pointer var var_list =
   match var with
   | IntegerAddress (s, o) ->
-      Printf.sprintf "mov ax, 0x%x\n    mov es, ax\n    mov ax, 0x%x" s o
-  | VariableAddress v -> string_of_variable v var_list
+      let text =
+        Printf.sprintf "    mov ax, 0x%x\n    mov es, ax\n    mov ax, 0x%x" s o
+      in
+      [ create_prgrm_string ~text () ]
+  | VariableAddress v -> pstring_of_variable v var_list
 
-let string_of_subscript addr offset var_list =
-  let str_ptr = string_of_pointer addr var_list in
+let pstring_of_subscript addr offset var_list =
+  let str_ptr = pstring_of_pointer addr var_list in
   match offset with
   | IntegerOffset i ->
-      Printf.sprintf
-        "; SUBSCRIPT\n\
-        \    %s\n\
-        \    mov si, ax\n\
-        \    mov ax, [es:si+0x%x]\n\
-        \    ; END SUBSCRIPT" str_ptr i
+      let ptext_begin =
+        let text_begin = Printf.sprintf "    ; SUBSCRIPT\n" in
+        create_prgrm_string ~text:text_begin ()
+      and ptext_end =
+        let text_end =
+          Printf.sprintf
+            "\n    mov si, ax\n    mov ax, [es:si+0x%x]\n    ; END SUBSCRIPT\n" i
+        in
+        create_prgrm_string ~text:text_end ()
+      in
+      [ ptext_begin ] @ str_ptr @ [ ptext_end ]
   | VariableOffset v ->
-      Printf.sprintf
-        "; SUBSCRIPT\n\
-        \    %s\n\
-        \    mov si, ax\n\
-        \    mov bx, %s\n\
-        \    mov ax, [es:si+bx]\n\
-        \    ; END SUBSCRIPT" str_ptr
-        (string_of_variable v var_list)
+      let ptext_begin = create_prgrm_string ~text:"    ; SUBSCRIPT\n" ()
+      and ptext_between = create_prgrm_string ~text:"\n    mov si, ax\n" ()
+      and ptext_end =
+        create_prgrm_string
+          ~text:"\n    mov bx, ax\n    mov ax, [es:si+bx]\n    ; END SUBSCRIPT\n"
+          ()
+      in
+      [ ptext_begin ] @ str_ptr @ [ ptext_between ]
+      @ pstring_of_variable v var_list
+      @ [ ptext_end ]
 
 let string_of_static_value = function
   | StaticInteger i -> Printf.sprintf "0x%x" i
@@ -94,10 +109,6 @@ let string_of_static_value = function
       let convert_char c others =
         let new_char =
           match c with
-          | '\n' -> "0x0A,"
-          | '\r' -> "0x0D,"
-          | '\b' -> "0x08,"
-          | '\t' -> "0x09,"
           | '\x00' -> "0,"
           | '\x20' .. '\x7E' as c -> Printf.sprintf "\'%c\'," c
           | _ as c -> Char.code c |> Printf.sprintf "0x%x,"
@@ -109,9 +120,11 @@ let string_of_static_value = function
 
 (* Statements *)
 
-let string_of_macro_stmt = Printf.sprintf "%s \n"
+let pstring_of_macro_stmt macro =
+  let text = Printf.sprintf "%s \n" macro in
+  [ create_prgrm_string ~text () ]
 
-let string_of_if ~scope ~expr ~stmt_list =
+let pstring_of_if ~scope ~expr ~stmt_list =
   let id =
     let replace_char = function '-' -> '_' | _ as c -> c in
     Uuidm.v4_gen (Random.State.make_self_init ()) ()
@@ -119,19 +132,25 @@ let string_of_if ~scope ~expr ~stmt_list =
     |> String.map replace_char
   in
   let new_scope = Printf.sprintf "%s.if%s" scope id in
-  Printf.sprintf
-    "    ; IF<%s>\n\
-    \    %s:\n\n\
-    \    %s\n\
-    \    cmp ax, 0\n\
-    \    jnz %s.end\n\n\
-     %s\n\n\
-    \    %s.end:\n\n"
-    id new_scope expr new_scope stmt_list new_scope
+
+  let ptext_begin =
+    let text_begin = Printf.sprintf "    ; IF<%s>\n    %s:\n\n" id new_scope in
+    create_prgrm_string ~text:text_begin ()
+  and ptext_between =
+    let text_between =
+      Printf.sprintf "\n    cmp ax, 0\n    jnz %s.end\n\n" new_scope
+    in
+    create_prgrm_string ~text:text_between ()
+  and ptext_end =
+    let text_end = Printf.sprintf "\n\n    %s.end:\n\n" new_scope in
+    create_prgrm_string ~text:text_end ()
+  in
+
+  [ ptext_begin ] @ expr @ [ ptext_between ] @ stmt_list @ [ ptext_end ]
 
 (* Expressions *)
 
-let string_of_eq ~scope ~left_value ~right_value =
+let pstring_of_eq ~scope ~left_value ~right_value =
   let id =
     let replace_char = function '-' -> '_' | _ as c -> c in
     Uuidm.v4_gen (Random.State.make_self_init ()) ()
@@ -139,53 +158,73 @@ let string_of_eq ~scope ~left_value ~right_value =
     |> String.map replace_char
   in
   let new_scope = Printf.sprintf "%s.eq%s" scope id in
-  Printf.sprintf
-    "; EQ<%s>\n\
-    \    %s\n\
-    \    mov bx, ax\n\
-    \    %s\n\
-    \    cmp bx, ax\n\
-    \    jne %s.false\n\
-    \    %s.true:\n\
-    \    mov ax, 1\n\
-    \    jmp %s.end\n\
-    \    %s.false:\n\
-    \    mov ax, 0\n\
-    \    %s.end:\n"
-    id left_value right_value new_scope new_scope new_scope new_scope new_scope
+
+  let ptext_begin =
+    let text = Printf.sprintf "    ; EQ<%s>\n" id in
+    create_prgrm_string ~text ()
+  and ptext_left_value = create_prgrm_string ~text:"    mov bx, ax\n" ()
+  and ptext_end =
+    let text =
+      Printf.sprintf
+        "\n\
+        \    cmp bx, ax\n\
+        \    jne %s.false\n\
+        \    %s.true:\n\
+        \    mov ax, 1\n\
+        \    jmp %s.end\n\
+        \    %s.false:\n\
+        \    mov ax, 0\n\
+        \    %s.end:\n"
+        new_scope new_scope new_scope new_scope new_scope
+    in
+    create_prgrm_string ~text ()
+  in
+  [ ptext_begin ] @ left_value @ [ ptext_left_value ] @ right_value
+  @ [ ptext_end ]
 
 (* Definitions *)
 
 let pstring_of_near_funcdef ~is_global ~fname ~args ~stmt_list =
-  let ig = if is_global then Printf.sprintf "GLOBAL %s \n" fname else "" in
-  let func_string =
-    Printf.sprintf
-      "%s:\n\
-      \    ; Near\n\
-      \    ; Args: %s\n\
-      \    push bp\n\
-      \    mov bp, sp\n\n\
-       %s\n\n\
-      \    pop bp\n\
-      \    ret\n"
-      fname (String.concat ", " args) stmt_list
+  let global =
+    let header =
+      if is_global then Printf.sprintf "GLOBAL %s \n" fname else ""
+    in
+    create_prgrm_string ~header ()
+  and ptext_begin =
+    let text =
+      Printf.sprintf
+        "%s:\n    ; Near\n    ; Args: %s\n    push bp\n    mov bp, sp\n\n" fname
+        (String.concat ", " args)
+    in
+    create_prgrm_string ~text ()
+  and ptext_end =
+    let text = "\n\n    pop bp\n    ret\n" in
+    create_prgrm_string ~text ()
   in
-  create_prgrm_string ~header:ig ~text:func_string ()
+  [ global; ptext_begin ] @ stmt_list @ [ ptext_end ]
 
 let pstring_of_staticvaruninitialized ~is_global ~stype ~sname =
-  let ig = if is_global then Printf.sprintf "GLOBAL %s \n" sname else "" in
+  let global =
+    let header =
+      if is_global then Printf.sprintf "GLOBAL %s \n" sname else ""
+    in
+    create_prgrm_string ~header ()
+  in
   let string_of_stype = match stype with Byte -> "resb" | Word -> "resw" in
   let svar_string = Printf.sprintf "%s %s 1\n" sname string_of_stype in
-  create_prgrm_string ~header:ig ~bss:svar_string ()
+  [ global; create_prgrm_string ~bss:svar_string () ]
 
 let pstring_of_staticvar ~is_global ~stype ~sname ~value =
-  let ig = if is_global then Printf.sprintf "GLOBAL %s \n" sname else "" in
+  let global =
+    let header =
+      if is_global then Printf.sprintf "GLOBAL %s \n" sname else ""
+    in
+    create_prgrm_string ~header ()
+  in
   let string_of_stype = match stype with Byte -> "db" | Word -> "dw" in
   let svar_string = Printf.sprintf "%s %s %s\n" sname string_of_stype value in
-  create_prgrm_string ~header:ig ~data:svar_string ()
+  [ global; create_prgrm_string ~data:svar_string () ]
 
 let pstring_of_extern extern_list =
-  let extern_string =
-    Printf.sprintf "EXTERN %s \n" (String.concat ", " extern_list)
-  in
-  create_prgrm_string ~header:extern_string ()
+  let header = Printf.sprintf "EXTERN %s \n" @@ String.concat ", " extern_list in
+  [ create_prgrm_string ~header () ]
