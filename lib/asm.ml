@@ -94,17 +94,18 @@ let string_of_static_value = function
       let convert_char c others =
         let new_char =
           match c with
-          | '\n' -> "\",0x0A,\""
-          | '\r' -> "\",0x0D,\""
-          | '\b' -> "\",0x08,\""
-          | '\t' -> "\",0x09,\""
-          | '\x00' -> "\",0,\""
-          | _ as c -> Printf.sprintf "%c" c
+          | '\n' -> "0x0A,"
+          | '\r' -> "0x0D,"
+          | '\b' -> "0x08,"
+          | '\t' -> "0x09,"
+          | '\x00' -> "0,"
+          | '\x20' .. '\x7E' as c -> Printf.sprintf "\'%c\'," c
+          | _ as c -> Char.code c |> Printf.sprintf "0x%x,"
         in
         new_char ^ others
       in
       let new_string = List.fold_right convert_char (explode s) "" in
-      Printf.sprintf "\"%s\",0" new_string
+      Printf.sprintf "%s0" new_string
 
 (* Statements *)
 

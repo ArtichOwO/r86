@@ -44,12 +44,13 @@ rule translate = parse
 and read_string = parse
   | '"' { let c = Buffer.contents buf in
           Buffer.clear buf; STRING c }
-  | '\\' { Buffer.add_char buf @@ convert_char lexbuf ; read_string lexbuf }
+  | "\\x" { Buffer.add_char buf @@ get_int_value lexbuf; read_string lexbuf }
+  | '\\' { Buffer.add_char buf @@ special_char lexbuf; read_string lexbuf }
   | [^ '"'] { Buffer.add_string buf (Lexing.lexeme lexbuf); read_string lexbuf }
   | eof { raise Exceptions.String_never_terminated }
   | _ as c { raise @@ Exceptions.Invalid_character c }
 
-and convert_char = parse
+and special_char = parse
   | '"' { '"' }
   | '\\' { '\\' }
   | 'n' { '\n' }
@@ -57,3 +58,6 @@ and convert_char = parse
   | 'b' { '\b' }
   | 't' { '\t' }
   | '0' { '\x00' }
+
+and get_int_value = parse
+  | ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] as i { Printf.sprintf "0x%s" i |> int_of_string |> Char.chr }
