@@ -58,6 +58,10 @@ and special_char = parse
   | 'b' { '\b' }
   | 't' { '\t' }
   | '0' { '\x00' }
+  | _ as c { raise @@ Exceptions.Invalid_character c }
 
 and get_int_value = parse
   | ['0'-'9' 'a'-'f' 'A'-'F'] ['0'-'9' 'a'-'f' 'A'-'F'] as i { Printf.sprintf "0x%s" i |> int_of_string |> Char.chr }
+  | _ { raise @@ Exceptions.Invalid_character (get_next_char lexbuf) }
+
+and get_next_char = parse _ as c { c }
