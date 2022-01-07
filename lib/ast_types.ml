@@ -36,6 +36,7 @@ and value =
   | Integer of int
   | Variable of string
   | Subscript of address_value * offset_value
+  | String of string
 
 and offset_value = IntegerOffset of int | VariableOffset of string
 

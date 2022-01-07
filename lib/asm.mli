@@ -21,6 +21,8 @@ val concat_tree_string : program_string list -> program_string
 
 val pstring_of_integer : int -> program_string list
 
+val pstring_of_string : string -> program_string list
+
 val pstring_of_variable :
   string -> Ast_types.arguments list -> program_string list
 

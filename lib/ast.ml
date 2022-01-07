@@ -24,6 +24,7 @@ and eval_value value var_list =
   | Integer i -> Asm.pstring_of_integer i
   | Variable var -> Asm.pstring_of_variable var var_list
   | Subscript (addr, offset) -> Asm.pstring_of_subscript addr offset var_list
+  | String s -> Asm.pstring_of_string s
 
 let rec eval_program defs_list =
   Asm.pstring_headers :: (List.flatten @@ List.map eval_defs defs_list)
@@ -50,5 +51,5 @@ and eval_defs = function
       Asm.pstring_of_staticvaruninitialized ~is_global ~stype ~sname
   | StaticVar { is_global; stype; sname; value } ->
       Asm.pstring_of_staticvar ~is_global ~stype ~sname
-          ~value:(Asm.string_of_static_value value)
+        ~value:(Asm.string_of_static_value value)
   | Extern extern_list -> Asm.pstring_of_extern extern_list

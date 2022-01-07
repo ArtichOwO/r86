@@ -51,11 +51,89 @@ let concat_tree_string pstring_list =
     pstring_list
   |> unbuf
 
+(* Definitions *)
+
+let pstring_of_near_funcdef ~is_global ~fname ~args ~stmt_list =
+  let global =
+    let header =
+      if is_global then Printf.sprintf "GLOBAL %s \n" fname else ""
+    in
+    create_prgrm_string ~header ()
+  and ptext_begin =
+    let text =
+      Printf.sprintf
+        "%s:\n    ; Near\n    ; Args: %s\n    push bp\n    mov bp, sp\n\n" fname
+        (String.concat ", " args)
+    in
+    create_prgrm_string ~text ()
+  and ptext_end =
+    let text = "\n\n    pop bp\n    ret\n" in
+    create_prgrm_string ~text ()
+  in
+  [ global; ptext_begin ] @ stmt_list @ [ ptext_end ]
+
+let pstring_of_staticvaruninitialized ~is_global ~stype ~sname =
+  let global =
+    let header =
+      if is_global then Printf.sprintf "GLOBAL %s \n" sname else ""
+    in
+    create_prgrm_string ~header ()
+  in
+  let string_of_stype = match stype with Byte -> "resb" | Word -> "resw" in
+  let svar_string = Printf.sprintf "%s %s 1\n" sname string_of_stype in
+  [ global; create_prgrm_string ~bss:svar_string () ]
+
+let pstring_of_staticvar ~is_global ~stype ~sname ~value =
+  let global =
+    let header =
+      if is_global then Printf.sprintf "GLOBAL %s \n" sname else ""
+    in
+    create_prgrm_string ~header ()
+  in
+  let string_of_stype = match stype with Byte -> "db" | Word -> "dw" in
+  let svar_string = Printf.sprintf "%s %s %s\n" sname string_of_stype value in
+  [ global; create_prgrm_string ~data:svar_string () ]
+
+let pstring_of_extern extern_list =
+  let header =
+    Printf.sprintf "EXTERN %s \n" @@ String.concat ", " extern_list
+  in
+  [ create_prgrm_string ~header () ]
+
 (* Values *)
+
+let string_of_static_value = function
+  | StaticInteger i -> Printf.sprintf "0x%x" i
+  | StaticString s ->
+      let explode s = List.init (String.length s) (String.get s) in
+      let convert_char c others =
+        let new_char =
+          match c with
+          | '\x00' -> "0,"
+          | '\x20' .. '\x7E' as c -> Printf.sprintf "\'%c\'," c
+          | _ as c -> Char.code c |> Printf.sprintf "0x%x,"
+        in
+        new_char ^ others
+      in
+      let new_string = List.fold_right convert_char (explode s) "" in
+      Printf.sprintf "%s0" new_string
 
 let pstring_of_integer i =
   let text = Printf.sprintf "    mov ax, %d" i in
   [ create_prgrm_string ~text () ]
+
+let pstring_of_string s =
+  let id =
+    let replace_char = function '-' -> '_' | _ as c -> c in
+    Uuidm.v4_gen (Random.State.make_self_init ()) ()
+    |> Uuidm.to_string ~upper:true
+    |> String.map replace_char
+  in
+  let sname = Printf.sprintf "string_%s" id in
+  let text = Printf.sprintf "    mov ax, %s" sname in
+  let value = StaticString s |> string_of_static_value in
+  [ create_prgrm_string ~text () ]
+  @ pstring_of_staticvar ~is_global:false ~stype:Byte ~sname ~value
 
 let pstring_of_variable var var_list =
   let text =
@@ -85,7 +163,8 @@ let pstring_of_subscript addr offset var_list =
       and ptext_end =
         let text_end =
           Printf.sprintf
-            "\n    mov si, ax\n    mov ax, [es:si+0x%x]\n    ; END SUBSCRIPT\n" i
+            "\n    mov si, ax\n    mov ax, [es:si+0x%x]\n    ; END SUBSCRIPT\n"
+            i
         in
         create_prgrm_string ~text:text_end ()
       in
@@ -95,28 +174,12 @@ let pstring_of_subscript addr offset var_list =
       and ptext_between = create_prgrm_string ~text:"\n    mov si, ax\n" ()
       and ptext_end =
         create_prgrm_string
-          ~text:"\n    mov bx, ax\n    mov ax, [es:si+bx]\n    ; END SUBSCRIPT\n"
-          ()
+          ~text:
+            "\n    mov bx, ax\n    mov ax, [es:si+bx]\n    ; END SUBSCRIPT\n" ()
       in
       [ ptext_begin ] @ str_ptr @ [ ptext_between ]
       @ pstring_of_variable v var_list
       @ [ ptext_end ]
-
-let string_of_static_value = function
-  | StaticInteger i -> Printf.sprintf "0x%x" i
-  | StaticString s ->
-      let explode s = List.init (String.length s) (String.get s) in
-      let convert_char c others =
-        let new_char =
-          match c with
-          | '\x00' -> "0,"
-          | '\x20' .. '\x7E' as c -> Printf.sprintf "\'%c\'," c
-          | _ as c -> Char.code c |> Printf.sprintf "0x%x,"
-        in
-        new_char ^ others
-      in
-      let new_string = List.fold_right convert_char (explode s) "" in
-      Printf.sprintf "%s0" new_string
 
 (* Statements *)
 
@@ -181,50 +244,3 @@ let pstring_of_eq ~scope ~left_value ~right_value =
   in
   [ ptext_begin ] @ left_value @ [ ptext_left_value ] @ right_value
   @ [ ptext_end ]
-
-(* Definitions *)
-
-let pstring_of_near_funcdef ~is_global ~fname ~args ~stmt_list =
-  let global =
-    let header =
-      if is_global then Printf.sprintf "GLOBAL %s \n" fname else ""
-    in
-    create_prgrm_string ~header ()
-  and ptext_begin =
-    let text =
-      Printf.sprintf
-        "%s:\n    ; Near\n    ; Args: %s\n    push bp\n    mov bp, sp\n\n" fname
-        (String.concat ", " args)
-    in
-    create_prgrm_string ~text ()
-  and ptext_end =
-    let text = "\n\n    pop bp\n    ret\n" in
-    create_prgrm_string ~text ()
-  in
-  [ global; ptext_begin ] @ stmt_list @ [ ptext_end ]
-
-let pstring_of_staticvaruninitialized ~is_global ~stype ~sname =
-  let global =
-    let header =
-      if is_global then Printf.sprintf "GLOBAL %s \n" sname else ""
-    in
-    create_prgrm_string ~header ()
-  in
-  let string_of_stype = match stype with Byte -> "resb" | Word -> "resw" in
-  let svar_string = Printf.sprintf "%s %s 1\n" sname string_of_stype in
-  [ global; create_prgrm_string ~bss:svar_string () ]
-
-let pstring_of_staticvar ~is_global ~stype ~sname ~value =
-  let global =
-    let header =
-      if is_global then Printf.sprintf "GLOBAL %s \n" sname else ""
-    in
-    create_prgrm_string ~header ()
-  in
-  let string_of_stype = match stype with Byte -> "db" | Word -> "dw" in
-  let svar_string = Printf.sprintf "%s %s %s\n" sname string_of_stype value in
-  [ global; create_prgrm_string ~data:svar_string () ]
-
-let pstring_of_extern extern_list =
-  let header = Printf.sprintf "EXTERN %s \n" @@ String.concat ", " extern_list in
-  [ create_prgrm_string ~header () ]

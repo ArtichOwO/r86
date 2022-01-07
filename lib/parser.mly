@@ -80,6 +80,7 @@ expr:
 
 value:
     | i=INTEGER { Integer i }
+    | s=STRING { String s }
     | v=label { Variable v }
     | address=address_value;LBRACK;offset=offset_value;RBRACK { Subscript (address,offset) }
     | ASTERISK;address=address_value { Subscript (address,(IntegerOffset 0)) }
