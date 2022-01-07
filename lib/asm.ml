@@ -225,7 +225,7 @@ let pstring_of_eq ~scope ~left_value ~right_value =
   let ptext_begin =
     let text = Printf.sprintf "    ; EQ<%s>\n" id in
     create_prgrm_string ~text ()
-  and ptext_left_value = create_prgrm_string ~text:"    mov bx, ax\n" ()
+  and ptext_left_value = create_prgrm_string ~text:"\n    mov bx, ax\n" ()
   and ptext_end =
     let text =
       Printf.sprintf
