@@ -14,9 +14,8 @@ let create_prgrm_string ?(header = "") ?(text = "") ?(data = "") ?(rodata = "")
     ?(bss = "") () =
   { header; text; data; rodata; bss }
 
-let string_of_pstring pstring =
-  String.concat "\n"
-    [ pstring.header; pstring.text; pstring.data; pstring.rodata; pstring.bss ]
+let string_of_pstring { header; text; data; rodata; bss } =
+  String.concat "\n" [ header; text; data; rodata; bss ]
 
 let pstring_headers =
   {
@@ -28,14 +27,14 @@ let pstring_headers =
   }
 
 let concat_tree_string pstring_list =
-  let concat (h, t, d, rd, b) pstring =
+  let concat (h, t, d, rd, b) { header; text; data; rodata; bss } =
     (ignore
     @@ Buffer.
-         ( add_string h pstring.header,
-           add_string t pstring.text,
-           add_string d pstring.data,
-           add_string rd pstring.rodata,
-           add_string b pstring.bss ));
+         ( add_string h header,
+           add_string t text,
+           add_string d data,
+           add_string rd rodata,
+           add_string b bss ));
     (h, t, d, rd, b)
   and unbuf (h, t, d, rd, b) =
     {
@@ -163,8 +162,7 @@ let pstring_of_subscript addr offset var_list =
       and ptext_end =
         let text_end =
           Printf.sprintf
-            "\n    mov si, ax\n    mov ax, [es:si+0x%x]\n    ; END SUBSCRIPT"
-            i
+            "\n    mov si, ax\n    mov ax, [es:si+0x%x]\n    ; END SUBSCRIPT" i
         in
         create_prgrm_string ~text:text_end ()
       in
@@ -174,8 +172,8 @@ let pstring_of_subscript addr offset var_list =
       and ptext_between = create_prgrm_string ~text:"\n    mov si, ax\n" ()
       and ptext_end =
         create_prgrm_string
-          ~text:
-            "\n    mov bx, ax\n    mov ax, [es:si+bx]\n    ; END SUBSCRIPT" ()
+          ~text:"\n    mov bx, ax\n    mov ax, [es:si+bx]\n    ; END SUBSCRIPT"
+          ()
       in
       [ ptext_begin ] @ str_ptr @ [ ptext_between ]
       @ pstring_of_variable v var_list
