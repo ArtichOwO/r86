@@ -163,7 +163,7 @@ let pstring_of_subscript addr offset var_list =
       and ptext_end =
         let text_end =
           Printf.sprintf
-            "\n    mov si, ax\n    mov ax, [es:si+0x%x]\n    ; END SUBSCRIPT\n"
+            "\n    mov si, ax\n    mov ax, [es:si+0x%x]\n    ; END SUBSCRIPT"
             i
         in
         create_prgrm_string ~text:text_end ()
@@ -175,7 +175,7 @@ let pstring_of_subscript addr offset var_list =
       and ptext_end =
         create_prgrm_string
           ~text:
-            "\n    mov bx, ax\n    mov ax, [es:si+bx]\n    ; END SUBSCRIPT\n" ()
+            "\n    mov bx, ax\n    mov ax, [es:si+bx]\n    ; END SUBSCRIPT" ()
       in
       [ ptext_begin ] @ str_ptr @ [ ptext_between ]
       @ pstring_of_variable v var_list
