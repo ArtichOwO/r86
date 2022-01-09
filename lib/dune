@@ -1,6 +1,6 @@
 (library
  (name ArtiLang)
- (libraries uuidm))
+ (libraries uuidm batteries))
 
 (ocamllex lexer)
 

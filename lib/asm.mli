@@ -24,14 +24,21 @@ val pstring_of_integer : int -> program_string list
 val pstring_of_string : string -> program_string list
 
 val pstring_of_variable :
-  string -> Ast_types.arguments list -> program_string list
+  string ->
+  Ast_types.arguments list ->
+  Ast_types.arguments list ->
+  program_string list
 
 val pstring_of_pointer :
-  Ast_types.address_value -> Ast_types.arguments list -> program_string list
+  Ast_types.address_value ->
+  Ast_types.arguments list ->
+  Ast_types.arguments list ->
+  program_string list
 
 val pstring_of_subscript :
   Ast_types.address_value ->
   Ast_types.offset_value ->
+  Ast_types.arguments list ->
   Ast_types.arguments list ->
   program_string list
 
@@ -47,6 +54,8 @@ val pstring_of_if :
   stmt_list:program_string list ->
   program_string list
 
+val pstring_of_localvar : string -> program_string list -> program_string list
+
 (* Expressions *)
 
 val pstring_of_eq :
@@ -61,6 +70,7 @@ val pstring_of_near_funcdef :
   is_global:bool ->
   fname:string ->
   args:string list ->
+  locals:string list ->
   stmt_list:program_string list ->
   program_string list
 

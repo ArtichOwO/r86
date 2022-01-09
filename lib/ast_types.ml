@@ -7,6 +7,7 @@ and defs =
       fname : string;
       args : string list;
       stmt_list : stmt list;
+      locals : string list;
     }
   | MacroDef of string
   | StaticVarUninitialized of {
@@ -24,7 +25,10 @@ and defs =
 
 and label = string
 
-and stmt = If of expr * stmt list | MacroStmt of string
+and stmt =
+  | If of expr * stmt list
+  | MacroStmt of string
+  | LocalVar of string * value
 
 and expr = Value of value | Eq of value * value
 

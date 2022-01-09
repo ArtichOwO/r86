@@ -37,6 +37,7 @@ rule translate = parse
   | "extern" { EXTERN }
   | "byte" { BYTE }
   | "word" { WORD }
+  | "let" { LET }
   | "==" { EQ }
   | "!=" { NEQ }
   | dec_digit+ as i { INTEGER (int_of_string i) }

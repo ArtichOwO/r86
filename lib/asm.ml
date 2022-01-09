@@ -52,7 +52,7 @@ let concat_tree_string pstring_list =
 
 (* Definitions *)
 
-let pstring_of_near_funcdef ~is_global ~fname ~args ~stmt_list =
+let pstring_of_near_funcdef ~is_global ~fname ~args ~locals ~stmt_list =
   let global =
     let header =
       if is_global then Printf.sprintf "GLOBAL %s \n" fname else ""
@@ -61,8 +61,14 @@ let pstring_of_near_funcdef ~is_global ~fname ~args ~stmt_list =
   and ptext_begin =
     let text =
       Printf.sprintf
-        "%s:\n    ; Near\n    ; Args: %s\n    push bp\n    mov bp, sp\n\n" fname
-        (String.concat ", " args)
+        "%s:\n\
+        \    ; Near\n\
+        \    ; Args: %s\n\
+        \    ; Locals: %s\n\
+        \    push bp\n\
+        \    mov bp, sp\n\n"
+        fname (String.concat ", " args)
+        (String.concat ", " locals)
     in
     create_prgrm_string ~text ()
   and ptext_end =
@@ -134,26 +140,29 @@ let pstring_of_string s =
   [ create_prgrm_string ~text () ]
   @ pstring_of_staticvar ~is_global:false ~stype:Byte ~sname ~value
 
-let pstring_of_variable var var_list =
+let pstring_of_variable var arg_list loc_list =
   let text =
-    if List.mem_assoc var var_list then
-      let offset = List.assoc var var_list in
+    if List.mem_assoc var arg_list then
+      let offset = List.assoc var arg_list in
       Printf.sprintf "    mov ax, [bp+0x%x]" ((offset * 2) + 4)
+    else if List.mem_assoc var loc_list then
+      let offset = List.assoc var loc_list in
+      Printf.sprintf "    mov ax, [bp-0x%x]" ((offset * 2) + 2)
     else Printf.sprintf "    mov ax, %s" var
   in
   [ create_prgrm_string ~text () ]
 
-let pstring_of_pointer var var_list =
+let pstring_of_pointer var arg_list loc_list =
   match var with
   | IntegerAddress (s, o) ->
       let text =
         Printf.sprintf "    mov ax, 0x%x\n    mov es, ax\n    mov ax, 0x%x" s o
       in
       [ create_prgrm_string ~text () ]
-  | VariableAddress v -> pstring_of_variable v var_list
+  | VariableAddress v -> pstring_of_variable v arg_list loc_list
 
-let pstring_of_subscript addr offset var_list =
-  let str_ptr = pstring_of_pointer addr var_list in
+let pstring_of_subscript addr offset arg_list loc_list =
+  let str_ptr = pstring_of_pointer addr arg_list loc_list in
   match offset with
   | IntegerOffset i ->
       let ptext_begin =
@@ -176,7 +185,7 @@ let pstring_of_subscript addr offset var_list =
           ()
       in
       [ ptext_begin ] @ str_ptr @ [ ptext_between ]
-      @ pstring_of_variable v var_list
+      @ pstring_of_variable v arg_list loc_list
       @ [ ptext_end ]
 
 (* Statements *)
@@ -208,6 +217,10 @@ let pstring_of_if ~scope ~expr ~stmt_list =
   in
 
   [ ptext_begin ] @ expr @ [ ptext_between ] @ stmt_list @ [ ptext_end ]
+
+let pstring_of_localvar name value =
+  let text = Printf.sprintf "\n    push ax ; LOCAL<%s>\n" name in
+  value @ [ create_prgrm_string ~text () ]
 
 (* Expressions *)
 
