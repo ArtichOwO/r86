@@ -34,9 +34,11 @@ let parse lexbuf =
          ~msg:
            (match error with
            | Invalid_character c -> Printf.sprintf "Invalid character `%c`" c
+           | String_never_terminated -> "String never terminated"
            | Parser.Error -> "Syntax error"
            | Pointer_overflow -> "Pointer value overflow"
            | Integer_overflow -> "Integer overflow"
+           | String_as_words -> "String can only be defined as bytes"
            | _ as other -> raise other)
     @@ create_line_info ~filename ~pos_lnum:lexbuf.lex_curr_p.pos_lnum
          ~pos_cnum:lexbuf.lex_curr_p.pos_cnum ~pos_bol:lexbuf.lex_curr_p.pos_bol
