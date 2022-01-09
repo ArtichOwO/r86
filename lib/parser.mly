@@ -15,6 +15,22 @@
   }
 
   let func_list : func_item BatDynArray.t = BatDynArray.create ()
+
+  let is_top_name_redef label =
+    let is_same_name func = 
+      func.name = label
+    in 
+    if BatDynArray.exists is_same_name func_list
+    then raise @@ Exceptions.Label_redefinition label
+    else false
+
+  let is_loc_name_redef label = 
+    let current_func = BatDynArray.last func_list in
+    if is_top_name_redef label 
+    || BatDynArray.mem label current_func.locals 
+    || BatDynArray.of_list current_func.args |> BatDynArray.mem label 
+    then raise @@ Exceptions.Label_redefinition label
+    else BatDynArray.add current_func.locals label
 %}
 
 %token SEMICOLON
@@ -58,10 +74,14 @@ defs:
       FuncDef { is_global; ftype; fname; args; stmt_list; locals } }
   | m=MACRO { MacroDef m }
   | ig=option(GLOBAL);stype=static_type;sname=LABEL;SEMICOLON
-    { let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
+    { if not @@ is_top_name_redef sname 
+      then BatDynArray.add func_list { name=sname; args=[]; locals=(BatDynArray.create ())};
+      let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
       StaticVarUninitialized { is_global; stype; sname } }
   | ig=option(GLOBAL);stype=static_type;sname=LABEL;ASSIGN;value=static_value;SEMICOLON
-    { begin match value with
+    { if not @@ is_top_name_redef sname 
+      then BatDynArray.add func_list { name=sname; args=[]; locals=(BatDynArray.create ())};
+      begin match value with
       | StaticInteger i ->
         (match stype with
         | Byte -> if i > 0xFF then raise Exceptions.Integer_overflow
@@ -73,7 +93,12 @@ defs:
       end;
       let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
       StaticVar { is_global; stype; sname; value } }
-  | EXTERN;externl=argument*;SEMICOLON { Extern externl }
+  | EXTERN;externl=argument+;SEMICOLON 
+    { let is_same_name_map label =
+        if not @@ is_top_name_redef label 
+        then BatDynArray.add func_list { name=label; args=[]; locals=(BatDynArray.create ())};
+      in List.iter is_same_name_map externl;
+      Extern externl }
 
 function_type:
   | NEAR { Near }
@@ -85,7 +110,11 @@ static_type:
 argument: lbl=LABEL;option(COMMA) { lbl }
 
 func_decl: ig=option(GLOBAL);ftype=function_type;fname=LABEL;LPAREN;args=argument*;RPAREN
-  { BatDynArray.add func_list { name=fname; args; locals=(BatDynArray.create ())}; 
+  { if not @@ is_top_name_redef fname 
+    then BatDynArray.add func_list { name=fname; args; locals=(BatDynArray.create ())};
+    let is_same_name_map label =
+      is_loc_name_redef label
+    in List.iter is_same_name_map args;
     let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
     { is_global; ftype; fname; args } }
 
@@ -93,12 +122,10 @@ stmt:
   | IF;i=expr;LBRACE;t=stmt*;RBRACE { If (i,t) }
   | m=MACRO { MacroStmt m }
   | LET;l=LABEL;SEMICOLON 
-    { let current_func = BatDynArray.last func_list in
-      BatDynArray.add current_func.locals l;
+    { is_loc_name_redef l;
       LocalVar (l, (Integer 0)) }
   | LET;l=LABEL;ASSIGN;v=value;SEMICOLON 
-    { let current_func = BatDynArray.last func_list in
-      BatDynArray.add current_func.locals l;
+    { is_loc_name_redef l;
       LocalVar (l, v) }
 
 expr:

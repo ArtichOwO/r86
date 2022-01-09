@@ -11,3 +11,5 @@ exception Pointer_overflow
 exception Integer_overflow
 
 exception String_as_words
+
+exception Label_redefinition of string
