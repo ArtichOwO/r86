@@ -35,65 +35,65 @@
 program: e=defs*; EOF { e }
 
 defs:
-    | ig=option(GLOBAL);ftype=function_type;fname=label;LPAREN;args=argument*;RPAREN;
-      LBRACE;stmt_list=stmt*;RBRACE 
-        { let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
-          FuncDef { is_global; ftype; fname; args; stmt_list } }
-    | m=MACRO { MacroDef m }
-    | ig=option(GLOBAL);stype=static_type;sname=label;SEMICOLON
-        { let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
-          StaticVarUninitialized { is_global; stype; sname } }
-    | ig=option(GLOBAL);stype=static_type;sname=label;ASSIGN;value=static_value;SEMICOLON
-        { begin match value with
-            | StaticInteger i ->
-                (match stype with
-                | Byte -> if i > 0xFF then raise Exceptions.Integer_overflow
-                | Word -> if i > 0xFFFF then raise Exceptions.Integer_overflow)
-            | StaticString _ -> 
-                (match stype with
-                | Word -> raise Exceptions.String_as_words
-                | _ -> ())
-          end;
-          let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
-          StaticVar { is_global; stype; sname; value } }
-    | EXTERN;externl=argument*;SEMICOLON { Extern externl }
+  | ig=option(GLOBAL);ftype=function_type;fname=label;LPAREN;args=argument*;RPAREN;
+    LBRACE;stmt_list=stmt*;RBRACE 
+    { let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
+      FuncDef { is_global; ftype; fname; args; stmt_list } }
+  | m=MACRO { MacroDef m }
+  | ig=option(GLOBAL);stype=static_type;sname=label;SEMICOLON
+    { let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
+      StaticVarUninitialized { is_global; stype; sname } }
+  | ig=option(GLOBAL);stype=static_type;sname=label;ASSIGN;value=static_value;SEMICOLON
+    { begin match value with
+      | StaticInteger i ->
+        (match stype with
+        | Byte -> if i > 0xFF then raise Exceptions.Integer_overflow
+        | Word -> if i > 0xFFFF then raise Exceptions.Integer_overflow)
+      | StaticString _ -> 
+        (match stype with
+        | Word -> raise Exceptions.String_as_words
+        | _ -> ())
+      end;
+      let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
+      StaticVar { is_global; stype; sname; value } }
+  | EXTERN;externl=argument*;SEMICOLON { Extern externl }
 
 function_type:
-    | NEAR { Near }
+  | NEAR { Near }
 
 static_type:
-    | BYTE { Byte }
-    | WORD { Word }
+  | BYTE { Byte }
+  | WORD { Word }
 
 argument: lbl=label;option(COMMA) { lbl }
 
 label: lbl=LABEL { lbl }
 
 stmt:
-    | IF;i=expr;LBRACE;t=stmt*;RBRACE { If (i,t) }
-    | m=MACRO { MacroStmt m }
+  | IF;i=expr;LBRACE;t=stmt*;RBRACE { If (i,t) }
+  | m=MACRO { MacroStmt m }
 
 expr:
-    | LPAREN;lv=value;EQ;rv=value;RPAREN { Eq (lv,rv) }
-    | v=value { Value v }
-    | LPAREN;v=value;RPAREN { Value v }
+  | LPAREN;lv=value;EQ;rv=value;RPAREN { Eq (lv,rv) }
+  | v=value { Value v }
+  | LPAREN;v=value;RPAREN { Value v }
 
 value:
-    | i=INTEGER { Integer i }
-    | s=STRING { String s }
-    | v=label { Variable v }
-    | address=address_value;LBRACK;offset=offset_value;RBRACK { Subscript (address,offset) }
-    | ASTERISK;address=address_value { Subscript (address,(IntegerOffset 0)) }
+  | i=INTEGER { Integer i }
+  | s=STRING { String s }
+  | v=label { Variable v }
+  | address=address_value;LBRACK;offset=offset_value;RBRACK { Subscript (address,offset) }
+  | ASTERISK;address=address_value { Subscript (address,(IntegerOffset 0)) }
 
 offset_value:
-    | i=INTEGER { IntegerOffset i }
-    | v=label { VariableOffset v }
+  | i=INTEGER { IntegerOffset i }
+  | v=label { VariableOffset v }
 
 address_value:
-    | i=INTEGER { if i > 0xFFFFF then raise Exceptions.Pointer_overflow;
-                  IntegerAddress (((Int.shift_right i 16) * 0x1000),(Int.logand i 0xFFFF)) }
-    | v=label { VariableAddress v }
+  | i=INTEGER { if i > 0xFFFFF then raise Exceptions.Pointer_overflow;
+                IntegerAddress (((Int.shift_right i 16) * 0x1000),(Int.logand i 0xFFFF)) }
+  | v=label { VariableAddress v }
 
 static_value:
-    | i=INTEGER { StaticInteger i }
-    | s=STRING { StaticString s }
+  | i=INTEGER { StaticInteger i }
+  | s=STRING { StaticString s }
