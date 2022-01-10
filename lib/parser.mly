@@ -68,13 +68,13 @@ defs:
       and locals = BatDynArray.to_list current.locals in
       FuncDef { is_global; ftype; fname; args; stmt_list; locals } }
   | m=MACRO { MacroDef m }
-  | ig=option(GLOBAL);stype=static_type;sname=LABEL;SEMICOLON
+  | ig=option(GLOBAL);stype=size_type;sname=LABEL;SEMICOLON
     { if is_top_name_redef sname 
       then raise @@ Exceptions.Label_redefinition sname
       else BatDynArray.add func_list { name=sname; args=[]; locals=(BatDynArray.create ())};
       let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
       StaticVarUninitialized { is_global; stype; sname } }
-  | ig=option(GLOBAL);stype=static_type;sname=LABEL;ASSIGN;value=static_value;SEMICOLON
+  | ig=option(GLOBAL);stype=size_type;sname=LABEL;ASSIGN;value=static_value;SEMICOLON
     { if is_top_name_redef sname 
       then raise @@ Exceptions.Label_redefinition sname
       else BatDynArray.add func_list { name=sname; args=[]; locals=(BatDynArray.create ())};
@@ -101,7 +101,7 @@ defs:
 function_type:
   | NEAR { Near }
 
-static_type:
+size_type:
   | BYTE { Byte }
   | WORD { Word }
 
@@ -133,6 +133,7 @@ stmt:
       then raise @@ Exceptions.Label_redefinition l
       else BatDynArray.add current_func.locals l;
       LocalVar (l, v) }
+  | l=address_value;ASSIGN;e=expr;SEMICOLON { Assignment (l,e) }
 
 expr:
   | LPAREN;lv=value;EQ;rv=value;RPAREN { Eq (lv,rv) }

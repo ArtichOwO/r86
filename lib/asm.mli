@@ -56,6 +56,9 @@ val pstring_of_if :
 
 val pstring_of_localvar : string -> program_string list -> program_string list
 
+val pstring_of_assignment :
+  program_string list -> program_string list -> program_string list
+
 (* Expressions *)
 
 val pstring_of_eq :
@@ -76,13 +79,13 @@ val pstring_of_near_funcdef :
 
 val pstring_of_staticvaruninitialized :
   is_global:bool ->
-  stype:Ast_types.static_type ->
+  stype:Ast_types.size_type ->
   sname:string ->
   program_string list
 
 val pstring_of_staticvar :
   is_global:bool ->
-  stype:Ast_types.static_type ->
+  stype:Ast_types.size_type ->
   sname:string ->
   value:string ->
   program_string list

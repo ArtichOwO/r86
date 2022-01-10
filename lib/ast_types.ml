@@ -12,12 +12,12 @@ and defs =
   | MacroDef of string
   | StaticVarUninitialized of {
       is_global : bool;
-      stype : static_type;
+      stype : size_type;
       sname : string;
     }
   | StaticVar of {
       is_global : bool;
-      stype : static_type;
+      stype : size_type;
       sname : string;
       value : static_value;
     }
@@ -29,12 +29,13 @@ and stmt =
   | If of expr * stmt list
   | MacroStmt of string
   | LocalVar of string * value
+  | Assignment of address_value * expr
 
 and expr = Value of value | Eq of value * value
 
 and function_type = Near
 
-and static_type = Byte | Word
+and size_type = Byte | Word
 
 and value =
   | Integer of int

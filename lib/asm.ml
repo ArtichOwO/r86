@@ -232,6 +232,14 @@ let pstring_of_localvar name value =
   let text = Printf.sprintf "\n    push ax ; LOCAL<%s>\n" name in
   value @ [ create_prgrm_string ~text () ]
 
+let pstring_of_assignment address expr =
+  let addr_text = "\n    mov di, ax\n"
+  and expr_text = "\n    mov [es:di], ax\n" in
+  address
+  @ [ create_prgrm_string ~text:addr_text () ]
+  @ expr
+  @ [ create_prgrm_string ~text:expr_text () ]
+
 (* Expressions *)
 
 let pstring_of_eq ~scope ~left_value ~right_value =
