@@ -143,10 +143,8 @@ value:
   | i=INTEGER { Integer i }
   | s=STRING { String s }
   | v=LABEL 
-    { let current_func = BatDynArray.last func_list in
-      if is_loc_name_redef v 
-      then BatDynArray.add current_func.locals v
-      else raise @@ Exceptions.Label_not_defined v;
+    { if not @@ is_loc_name_redef v 
+      then raise @@ Exceptions.Label_not_defined v;
       Variable v }
   | address=address_value;LBRACK;offset=offset_value;RBRACK { Subscript (address,offset) }
   | ASTERISK;address=address_value { Subscript (address,(IntegerOffset 0)) }
@@ -159,10 +157,8 @@ address_value:
   | i=INTEGER { if i > 0xFFFFF then raise Exceptions.Pointer_overflow;
                 IntegerAddress (((Int.shift_right i 16) * 0x1000),(Int.logand i 0xFFFF)) }
   | v=LABEL 
-    { let current_func = BatDynArray.last func_list in
-      if is_loc_name_redef v 
-      then BatDynArray.add current_func.locals v
-      else raise @@ Exceptions.Label_not_defined v;
+    { if not @@ is_loc_name_redef v 
+      then raise @@ Exceptions.Label_not_defined v;
       VariableAddress v }
 
 static_value:
