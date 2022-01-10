@@ -159,7 +159,17 @@ let pstring_of_pointer var arg_list loc_list =
         Printf.sprintf "    mov ax, 0x%x\n    mov es, ax\n    mov ax, 0x%x" s o
       in
       [ create_prgrm_string ~text () ]
-  | VariableAddress v -> pstring_of_variable v arg_list loc_list
+  | VariableAddress v ->
+      let text =
+        if List.mem_assoc v arg_list then
+          let offset = List.assoc v arg_list in
+          Printf.sprintf "    mov ax, bp\n    add ax, 0x%x" ((offset * 2) + 4)
+        else if List.mem_assoc v loc_list then
+          let offset = List.assoc v loc_list in
+          Printf.sprintf "    mov ax, bp\n    sub ax, 0x%x" ((offset * 2) + 2)
+        else Printf.sprintf "    mov ax, %s" v
+      in
+      [ create_prgrm_string ~text () ]
 
 let pstring_of_subscript addr offset arg_list loc_list =
   let str_ptr = pstring_of_pointer addr arg_list loc_list in
