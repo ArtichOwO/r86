@@ -40,7 +40,9 @@ let parse lexbuf =
            | Integer_overflow -> "Integer overflow"
            | String_as_words -> "String can only be defined as bytes"
            | Label_redefinition s ->
-               Printf.sprintf "Label redefinition \"%s\"" s
+               Printf.sprintf "Label \"%s\" redefined" s
+           | Label_not_defined s ->
+               Printf.sprintf "Label \"%s\" not defined" s
            | _ as other -> raise other)
     @@ create_line_info ~filename ~pos_lnum:lexbuf.lex_curr_p.pos_lnum
          ~pos_cnum:lexbuf.lex_curr_p.pos_cnum ~pos_bol:lexbuf.lex_curr_p.pos_bol
