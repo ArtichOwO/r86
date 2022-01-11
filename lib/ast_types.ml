@@ -29,7 +29,7 @@ and stmt =
   | If of expr * stmt list
   | MacroStmt of string
   | LocalVar of string * value
-  | Assignment of address_value * expr
+  | Assignment of address_value * expr * size_type
   | SubAssignment of address_value * offset_value * expr * size_type
 
 and expr = Value of value | Eq of value * value

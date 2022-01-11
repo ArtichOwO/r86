@@ -13,10 +13,11 @@ and eval_stmt scope arg_list loc_list pstmt =
   | MacroStmt macro -> Asm.pstring_of_macro_stmt macro
   | LocalVar (name, value) ->
       eval_value value arg_list loc_list |> Asm.pstring_of_localvar name
-  | Assignment (addr, expr) ->
-      eval_expr scope arg_list loc_list expr
-      |> Asm.pstring_of_assignment
-         @@ Asm.pstring_of_pointer addr arg_list loc_list
+  | Assignment (addr, expr, size_type) ->
+      Asm.pstring_of_assignment
+        (Asm.pstring_of_pointer addr arg_list loc_list)
+        (eval_expr scope arg_list loc_list expr)
+        size_type
   | SubAssignment (addr, offset, expr, size_type) ->
       Asm.pstring_of_subassignment
         (Asm.pstring_of_pointer addr arg_list loc_list)

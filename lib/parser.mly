@@ -133,10 +133,15 @@ stmt:
       then raise @@ Exceptions.Label_redefinition l
       else BatDynArray.add current_func.locals l;
       LocalVar (l, v) }
-  | l=address_value;ASSIGN;e=expr;SEMICOLON { Assignment (l,e) }
+  | l=address_value;ASSIGN;t=option(size_type);e=expr;SEMICOLON 
+    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
+      Assignment (l,e,st) }
   | l=address_value;LBRACK;o=offset_value;RBRACK;ASSIGN;t=option(size_type);e=expr;SEMICOLON
     { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
       SubAssignment (l,o,e,st) }
+  | ASTERISK;l=address_value;ASSIGN;t=option(size_type);e=expr;SEMICOLON
+    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
+      SubAssignment (l,(IntegerOffset 0),e,st) }
 
 expr:
   | LPAREN;lv=value;EQ;rv=value;RPAREN { Eq (lv,rv) }

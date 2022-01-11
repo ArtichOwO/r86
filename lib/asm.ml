@@ -225,7 +225,7 @@ let pstring_of_if ~scope ~expr ~stmt_list =
     create_prgrm_string ~text:text_begin ()
   and ptext_between =
     let text_between =
-      Printf.sprintf "\n    cmp ax, 0\n    jnz %s.end\n\n" new_scope
+      Printf.sprintf "\n    cmp ax, 0\n    jnz %s.end\n" new_scope
     in
     create_prgrm_string ~text:text_between ()
   and ptext_end =
@@ -239,9 +239,10 @@ let pstring_of_localvar name value =
   let text = Printf.sprintf "\n    push ax ; LOCAL<%s>\n" name in
   value @ [ create_prgrm_string ~text () ]
 
-let pstring_of_assignment address expr =
+let pstring_of_assignment address expr stype =
+  let dest_reg = match stype with Byte -> "al" | Word -> "ax" in
   let addr_text = "\n    mov di, ax\n"
-  and expr_text = "\n    mov [es:di], ax\n" in
+  and expr_text = Printf.sprintf "\n    mov [es:di], %s\n" dest_reg in
   address
   @ [ create_prgrm_string ~text:addr_text () ]
   @ expr

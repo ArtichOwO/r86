@@ -57,7 +57,10 @@ val pstring_of_if :
 val pstring_of_localvar : string -> program_string list -> program_string list
 
 val pstring_of_assignment :
-  program_string list -> program_string list -> program_string list
+  program_string list ->
+  program_string list ->
+  Ast_types.size_type ->
+  program_string list
 
 val pstring_of_subassignment :
   program_string list ->
