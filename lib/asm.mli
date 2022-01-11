@@ -59,6 +59,15 @@ val pstring_of_localvar : string -> program_string list -> program_string list
 val pstring_of_assignment :
   program_string list -> program_string list -> program_string list
 
+val pstring_of_subassignment :
+  program_string list ->
+  Ast_types.offset_value ->
+  program_string list ->
+  Ast_types.size_type ->
+  Ast_types.arguments list ->
+  Ast_types.arguments list ->
+  program_string list
+
 (* Expressions *)
 
 val pstring_of_eq :

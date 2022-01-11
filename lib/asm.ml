@@ -124,7 +124,7 @@ let string_of_static_value = function
       Printf.sprintf "%s0" new_string
 
 let pstring_of_integer i =
-  let text = Printf.sprintf "    mov ax, %d" i in
+  let text = Printf.sprintf "\n    mov ax, %d" i in
   [ create_prgrm_string ~text () ]
 
 let pstring_of_string s =
@@ -135,7 +135,7 @@ let pstring_of_string s =
     |> String.map replace_char
   in
   let sname = Printf.sprintf "string_%s" id in
-  let text = Printf.sprintf "    mov ax, %s" sname in
+  let text = Printf.sprintf "\n    mov ax, %s" sname in
   let value = StaticString s |> string_of_static_value in
   [ create_prgrm_string ~text () ]
   @ pstring_of_staticvar ~is_global:false ~stype:Byte ~sname ~value
@@ -144,13 +144,13 @@ let pstring_of_variable var arg_list loc_list =
   let text =
     if List.mem_assoc var arg_list then
       let offset = List.assoc var arg_list in
-      Printf.sprintf "    mov ax, ss\n    mov es, ax\n    mov ax, [bp+0x%x]"
+      Printf.sprintf "\n    mov ax, ss\n    mov es, ax\n    mov ax, [bp+0x%x]"
         ((offset * 2) + 4)
     else if List.mem_assoc var loc_list then
       let offset = List.assoc var loc_list in
-      Printf.sprintf "    mov ax, ss\n    mov es, ax\n    mov ax, [bp-0x%x]"
+      Printf.sprintf "\n    mov ax, ss\n    mov es, ax\n    mov ax, [bp-0x%x]"
         ((offset * 2) + 2)
-    else Printf.sprintf "    mov ax, ds\n    mov es, ax\n    mov ax, %s" var
+    else Printf.sprintf "\n    mov ax, ds\n    mov es, ax\n    mov ax, %s" var
   in
   [ create_prgrm_string ~text () ]
 
@@ -158,7 +158,8 @@ let pstring_of_pointer var arg_list loc_list =
   match var with
   | IntegerAddress (s, o) ->
       let text =
-        Printf.sprintf "    mov ax, 0x%x\n    mov es, ax\n    mov ax, 0x%x" s o
+        Printf.sprintf "\n    mov ax, 0x%x\n    mov es, ax\n    mov ax, 0x%x" s
+          o
       in
       [ create_prgrm_string ~text () ]
   | VariableAddress v ->
@@ -166,14 +167,14 @@ let pstring_of_pointer var arg_list loc_list =
         if List.mem_assoc v arg_list then
           let offset = List.assoc v arg_list in
           Printf.sprintf
-            "    mov ax, ss\n    mov es, ax\n    mov ax, bp\n    add ax, 0x%x"
+            "\n    mov ax, ss\n    mov es, ax\n    mov ax, bp\n    add ax, 0x%x"
             ((offset * 2) + 4)
         else if List.mem_assoc v loc_list then
           let offset = List.assoc v loc_list in
           Printf.sprintf
-            "    mov ax, ss\n    mov es, ax\n    mov ax, bp\n    sub ax, 0x%x"
+            "\n    mov ax, ss\n    mov es, ax\n    mov ax, bp\n    sub ax, 0x%x"
             ((offset * 2) + 2)
-        else Printf.sprintf "    mov ax, ds\n    mov es, ax\n    mov ax, %s" v
+        else Printf.sprintf "\n    mov ax, ds\n    mov es, ax\n    mov ax, %s" v
       in
       [ create_prgrm_string ~text () ]
 
@@ -182,7 +183,7 @@ let pstring_of_subscript addr offset arg_list loc_list =
   match offset with
   | IntegerOffset i ->
       let ptext_begin =
-        let text_begin = Printf.sprintf "    ; SUBSCRIPT\n" in
+        let text_begin = Printf.sprintf "\n    ; SUBSCRIPT" in
         create_prgrm_string ~text:text_begin ()
       and ptext_end =
         let text_end =
@@ -220,9 +221,7 @@ let pstring_of_if ~scope ~expr ~stmt_list =
   let new_scope = Printf.sprintf "%s.if%s" scope id in
 
   let ptext_begin =
-    let text_begin =
-      Printf.sprintf "\n    ; IF<%s>\n    %s:\n\n" id new_scope
-    in
+    let text_begin = Printf.sprintf "\n\n    ; IF<%s>\n    %s:" id new_scope in
     create_prgrm_string ~text:text_begin ()
   and ptext_between =
     let text_between =
@@ -247,6 +246,31 @@ let pstring_of_assignment address expr =
   @ [ create_prgrm_string ~text:addr_text () ]
   @ expr
   @ [ create_prgrm_string ~text:expr_text () ]
+
+let pstring_of_subassignment address offset expr stype arg_list loc_list =
+  let dest_reg = match stype with Byte -> "al" | Word -> "ax"
+  and ptext_begin = create_prgrm_string ~text:"\n    ; SUBSCRIPT ASSIGN" ()
+  and ptext_between = create_prgrm_string ~text:"\n    mov si, ax" () in
+  let ptext_end =
+    match offset with
+    | IntegerOffset i ->
+        let text =
+          Printf.sprintf
+            "\n    mov [es:si+0x%x], %s\n    ; END SUBSCRIPT ASSIGN" i dest_reg
+        in
+        [ create_prgrm_string ~text () ]
+    | VariableOffset v ->
+        let text =
+          Printf.sprintf
+            "\n\
+            \    mov bx, ax\n\
+            \    mov [es:si+bx], %s\n\
+            \    ; END SUBSCRIPT ASSIGN" dest_reg
+        in
+        pstring_of_variable v arg_list loc_list
+        @ [ create_prgrm_string ~text () ]
+  in
+  [ ptext_begin ] @ address @ [ ptext_between ] @ expr @ ptext_end
 
 (* Expressions *)
 

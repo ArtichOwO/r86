@@ -17,6 +17,12 @@ and eval_stmt scope arg_list loc_list pstmt =
       eval_expr scope arg_list loc_list expr
       |> Asm.pstring_of_assignment
          @@ Asm.pstring_of_pointer addr arg_list loc_list
+  | SubAssignment (addr, offset, expr, size_type) ->
+      Asm.pstring_of_subassignment
+        (Asm.pstring_of_pointer addr arg_list loc_list)
+        offset
+        (eval_expr scope arg_list loc_list expr)
+        size_type arg_list loc_list
 
 and eval_expr scope arg_list loc_list pexpr =
   match pexpr with
