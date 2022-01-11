@@ -144,11 +144,11 @@ let pstring_of_variable var arg_list loc_list =
   let text =
     if List.mem_assoc var arg_list then
       let offset = List.assoc var arg_list in
-      Printf.sprintf "    mov ax, [bp+0x%x]" ((offset * 2) + 4)
+      Printf.sprintf "    mov ax, ss\n    mov es, ax\n    mov ax, [bp+0x%x]" ((offset * 2) + 4)
     else if List.mem_assoc var loc_list then
       let offset = List.assoc var loc_list in
-      Printf.sprintf "    mov ax, [bp-0x%x]" ((offset * 2) + 2)
-    else Printf.sprintf "    mov ax, %s" var
+      Printf.sprintf "    mov ax, ss\n    mov es, ax\n    mov ax, [bp-0x%x]" ((offset * 2) + 2)
+    else Printf.sprintf "    mov ax, ds\n    mov es, ax\n    mov ax, %s" var
   in
   [ create_prgrm_string ~text () ]
 
@@ -163,11 +163,11 @@ let pstring_of_pointer var arg_list loc_list =
       let text =
         if List.mem_assoc v arg_list then
           let offset = List.assoc v arg_list in
-          Printf.sprintf "    mov ax, bp\n    add ax, 0x%x" ((offset * 2) + 4)
+          Printf.sprintf "    mov ax, ss\n    mov es, ax\n    mov ax, bp\n    add ax, 0x%x" ((offset * 2) + 4)
         else if List.mem_assoc v loc_list then
           let offset = List.assoc v loc_list in
-          Printf.sprintf "    mov ax, bp\n    sub ax, 0x%x" ((offset * 2) + 2)
-        else Printf.sprintf "    mov ax, %s" v
+          Printf.sprintf "    mov ax, ss\n    mov es, ax\n    mov ax, bp\n    sub ax, 0x%x" ((offset * 2) + 2)
+        else Printf.sprintf "    mov ax, ds\n    mov es, ax\n    mov ax, %s" v
       in
       [ create_prgrm_string ~text () ]
 
