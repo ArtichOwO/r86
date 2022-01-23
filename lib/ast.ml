@@ -42,8 +42,8 @@ and eval_value value arg_list loc_list =
   | String s -> Asm.pstring_of_string s
 
 let rec eval_program defs_list =
-  Asm.pstring_headers :: (List.flatten @@ List.map eval_defs defs_list)
-  |> Asm.concat_tree_string |> Asm.string_of_pstring
+  Pstring.headers :: (List.flatten @@ List.map eval_defs defs_list)
+  |> Pstring.concat |> Pstring.to_string
 
 and eval_defs = function
   | FuncDef { is_global; ftype; fname; args; stmt_list; locals } -> (
@@ -64,7 +64,7 @@ and eval_defs = function
       | Near ->
           Asm.pstring_of_near_funcdef ~is_global ~stmt_list:stmt_list_pstring
             ~fname ~args ~locals)
-  | MacroDef m -> [ Asm.create_prgrm_string ~header:m () ]
+  | MacroDef m -> [ Pstring.create ~header:m () ]
   | StaticVarUninitialized { is_global; stype; sname } ->
       Asm.pstring_of_staticvaruninitialized ~is_global ~stype ~sname
   | StaticVar { is_global; stype; sname; value } ->
