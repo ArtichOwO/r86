@@ -1,11 +1,13 @@
+open Asm_types
+
 type t
 
 val create :
-  ?header:string ->
-  ?text:string ->
-  ?data:string ->
-  ?rodata:string ->
-  ?bss:string ->
+  ?header:instruction list ->
+  ?text:instruction list ->
+  ?data:instruction list ->
+  ?rodata:instruction list ->
+  ?bss:instruction list ->
   unit ->
   t
 

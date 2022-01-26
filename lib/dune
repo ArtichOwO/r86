@@ -1,6 +1,7 @@
 (library
  (name ArtiLang)
- (libraries uuidm batteries))
+ (libraries uuidm batteries)
+ (modules_without_implementation asm_types ast_types))
 
 (ocamllex lexer)
 
