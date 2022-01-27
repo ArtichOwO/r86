@@ -99,7 +99,6 @@ and eval_stmt ~scope ~args ~locals pstmt =
       ]
       @ eval_stmt_list ~scope:new_scope ~args ~locals sl
       @ [ Pstring.create ~text:text_end () ]
-  | MacroStmt _ -> []
   | LocalVar (_, value) ->
       let text = [ Push (Word, Register AX) ] in
       [ eval_value ~args ~locals value; Pstring.create ~text () ]
@@ -295,7 +294,6 @@ and eval_defs = function
             stmt_list_pstring;
             Pstring.create ~text:text_end ();
           ])
-  | MacroDef _ -> []
   | StaticVarUninitialized { is_global; stype; sname } ->
       let header = if is_global then [ Global [ sname ] ] else []
       and mnemo = match stype with Byte -> Resb 1 | Word -> Resw 1 in

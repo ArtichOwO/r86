@@ -9,7 +9,6 @@ and defs =
       stmt_list : stmt list;
       locals : string list;
     }
-  | MacroDef of string
   | StaticVarUninitialized of {
       is_global : bool;
       stype : size_type;
@@ -27,7 +26,6 @@ and label = string
 
 and stmt =
   | If of expr * stmt list
-  | MacroStmt of string
   | LocalVar of string * value
   | Assignment of address_value * expr * size_type
   | SubAssignment of address_value * offset_value * expr * size_type

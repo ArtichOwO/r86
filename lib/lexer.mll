@@ -12,7 +12,6 @@ let id_char = ['0'-'9' 'a'-'z' 'A'-'Z' '_']
 
 rule translate = parse
   | eof { EOF }
-  | "%" [^ '\r' '\n']+ newline as m { Lexing.new_line lexbuf; MACRO m }
   | "/*" _* "*/" { translate lexbuf }
   | "//" [^ '\r' '\n']* (newline) { Lexing.new_line lexbuf; translate lexbuf }
   | newline { Lexing.new_line lexbuf; translate lexbuf }

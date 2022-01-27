@@ -67,7 +67,6 @@ defs:
       let { is_global; ftype; fname; args } = fd 
       and locals = BatDynArray.to_list current.locals in
       FuncDef { is_global; ftype; fname; args; stmt_list; locals } }
-  | m=MACRO { MacroDef m }
   | ig=option(GLOBAL);stype=size_type;sname=LABEL;SEMICOLON
     { if is_top_name_redef sname 
       then raise @@ Exceptions.Label_redefinition sname
@@ -120,7 +119,6 @@ func_decl: ig=option(GLOBAL);ftype=function_type;fname=LABEL;LPAREN;args=argumen
 
 stmt:
   | IF;i=expr;LBRACE;t=stmt*;RBRACE { If (i,t) }
-  | m=MACRO { MacroStmt m }
   | LET;l=LABEL;SEMICOLON 
     { let current_func = BatDynArray.last func_list in
       if is_loc_name_redef l 
