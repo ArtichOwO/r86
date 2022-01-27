@@ -44,7 +44,12 @@ and value =
 
 and offset_value = IntegerOffset of int | VariableOffset of string
 
-and address_value = IntegerAddress of int * int | VariableAddress of string
+and address_value =
+  | IntegerAddress of int * int
+  | VariableAddress of string
+  | ComposedAddress of address_operand * address_operand
+
+and address_operand = IntegerAddressOp of int | VariableAddressOp of string
 
 and static_value = StaticInteger of int | StaticString of string
 

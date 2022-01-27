@@ -2,6 +2,31 @@ open Ast_types
 open Asm_types
 
 module Pointer = struct
+  module Operand = struct
+    let to_pstring ~args ~locals var =
+      match var with
+      | IntegerAddressOp i ->
+          let text = [ Mov (Word, Register AX, OpInt i) ] in
+          Pstring.create ~text ()
+      | VariableAddressOp v ->
+          let text =
+            if List.mem_assoc v args then
+              let offset = List.assoc v args in
+              [
+                Mov (Word, Register AX, Register BP);
+                Add (Register AX, OpInt ((offset * 2) + 4));
+              ]
+            else if List.mem_assoc v locals then
+              let offset = List.assoc v locals in
+              [
+                Mov (Word, Register AX, Register BP);
+                Sub (Register AX, OpInt ((offset * 2) + 2));
+              ]
+            else [ Mov (Word, Register AX, OpLabel v) ]
+          in
+          Pstring.create ~text ()
+  end
+
   let to_pstring ~args ~locals var =
     match var with
     | IntegerAddress (s, o) ->
@@ -39,6 +64,14 @@ module Pointer = struct
             ]
         in
         Pstring.create ~text ()
+    | ComposedAddress (segment, address) ->
+        let text = [ Mov (Word, Register ES, Register AX) ] in
+        [
+          Operand.to_pstring ~args ~locals segment;
+          Pstring.create ~text ();
+          Operand.to_pstring ~args ~locals address;
+        ]
+        |> Pstring.concat
 end
 
 module Variable = struct

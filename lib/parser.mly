@@ -29,6 +29,7 @@
 %}
 
 %token SEMICOLON
+%token COLON
 %token COMMA
 %token EOF
 
@@ -167,6 +168,16 @@ address_value:
     { if not @@ is_loc_name_redef v 
       then raise @@ Exceptions.Label_not_defined v;
       VariableAddress v }
+  | segment=address_operand;COLON;address=address_operand 
+    { ComposedAddress (segment, address) }
+
+address_operand:
+  | i=INTEGER { if i > 0xFFFF then raise Exceptions.Pointer_overflow;
+                IntegerAddressOp i }
+  | v=LABEL
+    { if not @@ is_loc_name_redef v 
+      then raise @@ Exceptions.Label_not_defined v;
+      VariableAddressOp v }
 
 static_value:
   | i=INTEGER { StaticInteger i }

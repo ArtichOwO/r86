@@ -17,6 +17,7 @@ rule translate = parse
   | newline { Lexing.new_line lexbuf; translate lexbuf }
   | ',' { COMMA }
   | ';' { SEMICOLON }
+  | ':' { COLON }
   | '(' { LPAREN }
   | ')' { RPAREN }
   | '{' { LBRACE }
