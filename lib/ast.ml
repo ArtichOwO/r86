@@ -27,7 +27,7 @@ module Pointer = struct
           Pstring.create ~text ()
   end
 
-  let to_pstring ~args ~locals var =
+  let to_pstring ~args ~locals ~segment var =
     match var with
     | IntegerAddress (s, o) ->
         let text =
@@ -58,7 +58,7 @@ module Pointer = struct
             ]
           else
             [
-              Mov (Word, Register AX, Register DS);
+              Mov (Word, Register AX, segment);
               Mov (Word, Register ES, Register AX);
               Mov (Word, Register AX, OpLabel v);
             ]
@@ -240,7 +240,7 @@ and eval_stmt ~scope ~args ~locals pstmt =
         [ Mov (stype, Memf (Register ES, Register DI), dest_reg) ]
       in
       [
-        Pointer.to_pstring address ~args ~locals;
+        Pointer.to_pstring address ~args ~locals ~segment:(Register DS);
         Pstring.create ~text:address_text ();
         eval_expr ~scope ~args ~locals expr;
         Pstring.create ~text:expr_text ();
@@ -285,11 +285,35 @@ and eval_stmt ~scope ~args ~locals pstmt =
       in
       [
         Pstring.create ~text:text_begin ();
-        Pointer.to_pstring address ~args ~locals;
+        Pointer.to_pstring address ~args ~locals ~segment:(Register DS);
         Pstring.create ~text:text_between ();
         eval_expr ~scope ~args ~locals expr;
         ptext_end;
       ]
+  | FuncCall (func, el) ->
+      let text_begin = [ Comment (true, "FUNC CALL") ]
+      and eval_expr_push expr =
+        [
+          eval_expr ~scope ~args ~locals expr;
+          Pstring.create ~text:[ Push (Word, Register AX) ] ();
+        ]
+        |> Pstring.concat
+      in
+      [ Pstring.create ~text:text_begin () ]
+      @ List.map eval_expr_push el
+      @ [
+          Pointer.to_pstring ~args ~locals ~segment:(Register CS) func;
+          Pstring.create
+            ~text:
+              [
+                (match func with
+                | VariableAddress _ -> Newline
+                | _ -> Push (Word, Register ES));
+                Calln (Register AX);
+                Add (Register SP, OpInt (List.length el * 2));
+              ]
+            ();
+        ]
 
 and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
   match pexpr with
@@ -332,7 +356,9 @@ and eval_value ~args ~locals value : Pstring.t =
       Pstring.create ~text ()
   | Variable var -> Variable.to_pstring var ~args ~locals
   | Subscript (address, offset) -> (
-      let address_pstring = Pointer.to_pstring ~args ~locals address in
+      let address_pstring =
+        Pointer.to_pstring ~args ~locals ~segment:(Register DS) address
+      in
       match offset with
       | IntegerOffset i ->
           let text_begin = [ Comment (true, "SUBSCRIPT") ]

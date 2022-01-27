@@ -149,6 +149,11 @@ stmt:
   | ASTERISK;l=address_value;ASSIGN;t=option(size_type);e=expr
     { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
       SubAssignment (l,(IntegerOffset 0),e,st) }
+  | func=address_value;LPAREN;el=funccall_argument*;RPAREN
+    { FuncCall (func, el) }
+
+funccall_argument:
+  | e=expr;option(COMMA) { e }
 
 expr:
   | LPAREN;lv=value;EQ;rv=value;RPAREN { Eq (lv,rv) }

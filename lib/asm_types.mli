@@ -59,3 +59,5 @@ and instruction =
   | Dw of static_value
   | Add of operand * operand
   | Sub of operand * operand
+  | Calln of operand
+  | Callf of operand * operand

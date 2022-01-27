@@ -110,6 +110,11 @@ module Instruction = struct
       | Sub (dst, src) ->
           sprintf "    sub %s, %s" (Operand.to_string dst)
             (Operand.to_string src)
+      | Calln address -> sprintf "    call %s" (Operand.to_string address)
+      | Callf (segment, address) ->
+          sprintf "    call %s:%s"
+            (Operand.to_string segment)
+            (Operand.to_string address)
     in
     sprintf "%s\n" instr_str
 end

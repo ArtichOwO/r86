@@ -31,6 +31,7 @@ and stmt =
   | LocalVar of string * value
   | Assignment of address_value * expr * size_type
   | SubAssignment of address_value * offset_value * expr * size_type
+  | FuncCall of address_value * expr list
 
 and expr = Value of value | Eq of value * value
 
