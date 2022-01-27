@@ -29,6 +29,7 @@ rule translate = parse
   | '"' { read_string lexbuf }
   | "for" { FOR }
   | "while" { WHILE }
+  | "until" { UNTIL }
   | "if" { IF }
   | "else" { ELSE }
   | "near" { NEAR }

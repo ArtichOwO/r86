@@ -44,6 +44,7 @@
 %token LET
 %token FOR
 %token WHILE
+%token UNTIL
 %token IF ELSE
 
 %token ASSIGN
@@ -125,7 +126,8 @@ stmt:
     condition=option(expr);SEMICOLON;
     inc=option(stmt);RPAREN;LBRACE;sl=stmt*;RBRACE 
     { For (init, condition, inc, sl) }
-  | WHILE;condition=option(expr);LBRACE;sl=stmt*;RBRACE { While (condition, sl) }
+  | WHILE;condition=option(expr);LBRACE;sl=stmt*;RBRACE { WhileUntil (condition, true, sl) }
+  | UNTIL;condition=option(expr);LBRACE;sl=stmt*;RBRACE { WhileUntil (condition, false, sl) }
   | LET;l=LABEL
     { let current_func = BatDynArray.last func_list in
       if is_loc_name_redef l 

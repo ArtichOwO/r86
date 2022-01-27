@@ -180,20 +180,24 @@ and eval_stmt ~scope ~args ~locals pstmt =
               ]
             ();
         ]
-  | While (condition, sl) ->
+  | WhileUntil (condition, is_while, sl) ->
       let id =
         let replace_char = function '-' -> '_' | _ as c -> c in
         Uuidm.v4_gen (Random.State.make_self_init ()) ()
         |> Uuidm.to_string ~upper:true
         |> String.map replace_char
       in
-      let new_scope = Printf.sprintf "%s.while%s" scope id in
+      let new_scope =
+        if is_while then Printf.sprintf "%s.while%s" scope id
+        else Printf.sprintf "%s.until%s" scope id
+      in
 
       [
         Pstring.create
           ~text:
             [
-              Comment (true, Printf.sprintf "WHILE<%s>" id);
+              (if is_while then Comment (true, Printf.sprintf "WHILE<%s>" id)
+              else Comment (true, Printf.sprintf "UNTIL<%s>" id));
               LabelDef (true, Printf.sprintf "%s.start" new_scope);
             ]
           ();
@@ -206,7 +210,9 @@ and eval_stmt ~scope ~args ~locals pstmt =
                 ~text:
                   [
                     Cmp (Word, Register AX, OpInt 0);
-                    Jz (OpLabel (Printf.sprintf "%s.end" new_scope));
+                    (if is_while then
+                     Jz (OpLabel (Printf.sprintf "%s.end" new_scope))
+                    else Jnz (OpLabel (Printf.sprintf "%s.end" new_scope)));
                     Newline;
                   ]
                 ();
