@@ -120,25 +120,29 @@ func_decl: ig=option(GLOBAL);ftype=function_type;fname=LABEL;LPAREN;args=argumen
 
 stmt:
   | IF;i=expr;LBRACE;t=stmt*;RBRACE { If (i,t) }
-  | LET;l=LABEL;SEMICOLON 
+  | FOR;LPAREN;init=option(stmt);SEMICOLON;
+    condition=option(expr);SEMICOLON;
+    inc=option(stmt);RPAREN;LBRACE;sl=stmt*;RBRACE 
+    { For (init, condition, inc, sl) }
+  | LET;l=LABEL
     { let current_func = BatDynArray.last func_list in
       if is_loc_name_redef l 
       then raise @@ Exceptions.Label_redefinition l
       else BatDynArray.add current_func.locals l;
       LocalVar (l, (Integer 0)) }
-  | LET;l=LABEL;ASSIGN;v=value;SEMICOLON 
+  | LET;l=LABEL;ASSIGN;v=value 
     { let current_func = BatDynArray.last func_list in
       if is_loc_name_redef l 
       then raise @@ Exceptions.Label_redefinition l
       else BatDynArray.add current_func.locals l;
       LocalVar (l, v) }
-  | l=address_value;ASSIGN;t=option(size_type);e=expr;SEMICOLON 
+  | l=address_value;ASSIGN;t=option(size_type);e=expr 
     { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
       Assignment (l,e,st) }
-  | l=address_value;LBRACK;o=offset_value;RBRACK;ASSIGN;t=option(size_type);e=expr;SEMICOLON
+  | l=address_value;LBRACK;o=offset_value;RBRACK;ASSIGN;t=option(size_type);e=expr
     { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
       SubAssignment (l,o,e,st) }
-  | ASTERISK;l=address_value;ASSIGN;t=option(size_type);e=expr;SEMICOLON
+  | ASTERISK;l=address_value;ASSIGN;t=option(size_type);e=expr
     { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
       SubAssignment (l,(IntegerOffset 0),e,st) }
 

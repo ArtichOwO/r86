@@ -52,6 +52,7 @@ and instruction =
   | Jmpf of int * operand
   | Jne of operand
   | Jnz of operand
+  | Jz of operand
   | Resb of int
   | Resw of int
   | Db of static_value

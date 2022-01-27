@@ -127,11 +127,59 @@ and eval_stmt ~scope ~args ~locals pstmt =
 
       [
         Pstring.create ~text:text_begin ();
-        eval_expr ~scope:new_scope ~args ~locals e;
+        eval_expr ~scope ~args ~locals e;
         Pstring.create ~text:text_between ();
       ]
-      @ eval_stmt_list ~scope:new_scope ~args ~locals sl
+      @ eval_stmt_list ~scope ~args ~locals sl
       @ [ Pstring.create ~text:text_end () ]
+  | For (init, condition, inc, sl) ->
+      let id =
+        let replace_char = function '-' -> '_' | _ as c -> c in
+        Uuidm.v4_gen (Random.State.make_self_init ()) ()
+        |> Uuidm.to_string ~upper:true
+        |> String.map replace_char
+      in
+      let new_scope = Printf.sprintf "%s.for%s" scope id in
+
+      [
+        Pstring.create ~text:[ Comment (true, Printf.sprintf "FOR<%s>" id) ] ();
+      ]
+      @ (match init with
+        | Some init_stmt -> eval_stmt ~scope ~args ~locals init_stmt
+        | None -> [])
+      @ [
+          Pstring.create
+            ~text:
+              [ LabelDef (true, Printf.sprintf "%s.start" new_scope); Newline ]
+            ();
+        ]
+      @ (match condition with
+        | Some condition_expr ->
+            [
+              eval_expr ~scope ~args ~locals condition_expr;
+              Pstring.create
+                ~text:
+                  [
+                    Cmp (Word, Register AX, OpInt 0);
+                    Jz (OpLabel (Printf.sprintf "%s.end" new_scope));
+                    Newline;
+                  ]
+                ();
+            ]
+        | None -> [])
+      @ eval_stmt_list ~scope ~args ~locals sl
+      @ (match inc with
+        | Some inc_stmt -> eval_stmt ~scope ~args ~locals inc_stmt
+        | None -> [])
+      @ [
+          Pstring.create
+            ~text:
+              [
+                Jmpn (OpLabel (Printf.sprintf "%s.start" new_scope));
+                LabelDef (true, Printf.sprintf "%s.end" new_scope);
+              ]
+            ();
+        ]
   | LocalVar (_, value) ->
       let text = [ Push (Word, Register AX) ] in
       [ eval_value ~args ~locals value; Pstring.create ~text () ]
