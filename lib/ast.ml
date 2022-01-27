@@ -180,6 +180,48 @@ and eval_stmt ~scope ~args ~locals pstmt =
               ]
             ();
         ]
+  | While (condition, sl) ->
+      let id =
+        let replace_char = function '-' -> '_' | _ as c -> c in
+        Uuidm.v4_gen (Random.State.make_self_init ()) ()
+        |> Uuidm.to_string ~upper:true
+        |> String.map replace_char
+      in
+      let new_scope = Printf.sprintf "%s.while%s" scope id in
+
+      [
+        Pstring.create
+          ~text:
+            [
+              Comment (true, Printf.sprintf "WHILE<%s>" id);
+              LabelDef (true, Printf.sprintf "%s.start" new_scope);
+            ]
+          ();
+      ]
+      @ (match condition with
+        | Some condition_expr ->
+            [
+              eval_expr ~scope ~args ~locals condition_expr;
+              Pstring.create
+                ~text:
+                  [
+                    Cmp (Word, Register AX, OpInt 0);
+                    Jz (OpLabel (Printf.sprintf "%s.end" new_scope));
+                    Newline;
+                  ]
+                ();
+            ]
+        | None -> [])
+      @ eval_stmt_list ~scope ~args ~locals sl
+      @ [
+          Pstring.create
+            ~text:
+              [
+                Jmpn (OpLabel (Printf.sprintf "%s.start" new_scope));
+                LabelDef (true, Printf.sprintf "%s.end" new_scope);
+              ]
+            ();
+        ]
   | LocalVar (_, value) ->
       let text = [ Push (Word, Register AX) ] in
       [ eval_value ~args ~locals value; Pstring.create ~text () ]

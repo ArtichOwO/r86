@@ -28,6 +28,7 @@ rule translate = parse
   | '*' { ASTERISK }
   | '"' { read_string lexbuf }
   | "for" { FOR }
+  | "while" { WHILE }
   | "if" { IF }
   | "else" { ELSE }
   | "near" { NEAR }
