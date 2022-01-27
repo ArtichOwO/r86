@@ -51,6 +51,7 @@ and instruction =
   | Jmpn of operand
   | Jmpf of int * operand
   | Jne of operand
+  | Je of operand
   | Jnz of operand
   | Jz of operand
   | Resb of int

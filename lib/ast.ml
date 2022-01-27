@@ -318,20 +318,30 @@ and eval_stmt ~scope ~args ~locals pstmt =
 and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
   match pexpr with
   | Value v -> eval_value ~args ~locals v
-  | Eq (lv, rv) ->
+  | N_Eq (is_eq, lv, rv) ->
       let id =
         let replace_char = function '-' -> '_' | _ as c -> c in
         Uuidm.v4_gen (Random.State.make_self_init ()) ()
         |> Uuidm.to_string ~upper:true
         |> String.map replace_char
       in
-      let new_scope = Printf.sprintf "%s.eq%s" scope id in
-      let text_begin = [ Comment (true, Printf.sprintf "EQ<%s>" id) ]
+      let new_scope =
+        if is_eq then Printf.sprintf "%s.eq%s" scope id
+        else Printf.sprintf "%s.neq%s" scope id
+      in
+      let text_begin =
+        [
+          Comment
+            ( true,
+              if is_eq then Printf.sprintf "EQ<%s>" id
+              else Printf.sprintf "NEQ<%s>" id );
+        ]
       and text_left_value = [ Mov (Word, Register BX, Register AX) ]
       and text_end =
         [
           Cmp (Word, Register BX, Register AX);
-          Jne (OpLabel (Printf.sprintf "%s.false" new_scope));
+          (if is_eq then Jne (OpLabel (Printf.sprintf "%s.false" new_scope))
+          else Je (OpLabel (Printf.sprintf "%s.false" new_scope)));
           LabelDef (true, Printf.sprintf "%s.true" new_scope);
           Mov (Word, Register AX, OpInt 1);
           Jmpn (OpLabel (Printf.sprintf "%s.end" new_scope));

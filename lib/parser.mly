@@ -156,7 +156,8 @@ funccall_argument:
   | e=expr;option(COMMA) { e }
 
 expr:
-  | LPAREN;lv=value;EQ;rv=value;RPAREN { Eq (lv,rv) }
+  | LPAREN;lv=value;EQ;rv=value;RPAREN { N_Eq (true,lv,rv) }
+  | LPAREN;lv=value;NEQ;rv=value;RPAREN { N_Eq (false,lv,rv) }
   | v=value { Value v }
   | LPAREN;v=value;RPAREN { Value v }
 

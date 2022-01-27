@@ -98,6 +98,7 @@ module Instruction = struct
       | Jmpf (segment, address) ->
           sprintf "    jmp 0x%x:%s" segment (Operand.to_string address)
       | Jne address -> sprintf "    jne %s" (Operand.to_string address)
+      | Je address -> sprintf "    je %s" (Operand.to_string address)
       | Jnz address -> sprintf "    jnz %s" (Operand.to_string address)
       | Jz address -> sprintf "    jz %s" (Operand.to_string address)
       | Resb bytes -> sprintf "    resb 0x%x" bytes

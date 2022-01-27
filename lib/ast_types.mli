@@ -33,7 +33,7 @@ and stmt =
   | SubAssignment of address_value * offset_value * expr * size_type
   | FuncCall of address_value * expr list
 
-and expr = Value of value | Eq of value * value
+and expr = Value of value | N_Eq of bool * value * value
 
 and function_type = Near
 
