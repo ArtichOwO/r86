@@ -70,13 +70,13 @@ defs:
       let { is_global; ftype; fname; args } = fd 
       and locals = BatDynArray.to_list current.locals in
       FuncDef { is_global; ftype; fname; args; stmt_list; locals } }
-  | ig=option(GLOBAL);stype=size_type;sname=LABEL;SEMICOLON
+  | ig=option(GLOBAL);stype=size_type;sname=LABEL
     { if is_top_name_redef sname 
       then raise @@ Exceptions.Label_redefinition sname
       else BatDynArray.add func_list { name=sname; args=[]; locals=(BatDynArray.create ())};
       let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
       StaticVarUninitialized { is_global; stype; sname } }
-  | ig=option(GLOBAL);stype=size_type;sname=LABEL;ASSIGN;value=static_value;SEMICOLON
+  | ig=option(GLOBAL);stype=size_type;sname=LABEL;ASSIGN;value=static_value
     { if is_top_name_redef sname 
       then raise @@ Exceptions.Label_redefinition sname
       else BatDynArray.add func_list { name=sname; args=[]; locals=(BatDynArray.create ())};
@@ -92,7 +92,7 @@ defs:
       end;
       let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
       StaticVar { is_global; stype; sname; value } }
-  | EXTERN;externl=argument+;SEMICOLON 
+  | EXTERN;externl=argument+ 
     { let is_same_name_map label =
         if is_top_name_redef label 
         then raise @@ Exceptions.Label_redefinition label
