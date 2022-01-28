@@ -164,10 +164,19 @@ stmt:
   | l=address_value;ASSIGN;t=option(size_type);e=expr 
     { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
       Assignment (l,e,st) }
+  | l=address_value;ASSIGN;t=option(size_type);e=funccall 
+    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
+      Assignment (l,e,st) }
   | l=address_value;LBRACK;o=offset_value;RBRACK;ASSIGN;t=option(size_type);e=expr
     { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
       SubAssignment (l,o,e,st) }
+  | l=address_value;LBRACK;o=offset_value;RBRACK;ASSIGN;t=option(size_type);e=funccall
+    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
+      SubAssignment (l,o,e,st) }
   | ASTERISK;l=address_value;ASSIGN;t=option(size_type);e=expr
+    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
+      SubAssignment (l,(IntegerOffset 0),e,st) }
+  | ASTERISK;l=address_value;ASSIGN;t=option(size_type);e=funccall
     { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
       SubAssignment (l,(IntegerOffset 0),e,st) }
   | func=address_value;LPAREN;el=funccall_argument*;RPAREN
