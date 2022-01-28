@@ -235,6 +235,8 @@ static_value:
 operation:
   | i=INTEGER { OperationInt i }
   | v=LABEL { OperationVar v }
+  | LPAREN;ASTERISK;address=address_value;RPAREN 
+    { OperationSubscript (address, IntegerOffset 0) }
   | PLUS { OperationAdd }
   | ASTERISK { OperationMul }
   | HYPHEN { OperationSub }

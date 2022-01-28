@@ -68,6 +68,7 @@ and arguments = string * int
 and operation =
   | OperationInt of int
   | OperationVar of string
+  | OperationSubscript of address_value * offset_value
   | OperationAdd
   | OperationSub
   | OperationMul

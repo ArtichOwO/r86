@@ -94,6 +94,50 @@ module Variable = struct
     Pstring.create ~text ()
 end
 
+module Subscript = struct
+  let to_pstring ~args ~locals address offset =
+    let address_pstring =
+      Pointer.to_pstring ~args ~locals ~segment:(Register DS) address
+    in
+    match offset with
+    | IntegerOffset i ->
+        let text_begin = [ Comment (true, "SUBSCRIPT") ]
+        and text_end =
+          [
+            Mov (Word, Register SI, Register AX);
+            Mov (Word, Register AX, MemfPos (Register ES, Register SI, OpInt i));
+            Comment (true, "END SUBSCRIPT");
+          ]
+        in
+        [
+          Pstring.create ~text:text_begin ();
+          address_pstring;
+          Pstring.create ~text:text_end ();
+        ]
+        |> Pstring.concat
+    | VariableOffset v ->
+        let text_begin = [ Comment (true, "SUBSCRIPT") ]
+        and text_between = [ Mov (Word, Register SI, Register AX) ]
+        and text_end =
+          [
+            Mov (Word, Register BX, Register AX);
+            Mov
+              ( Word,
+                Register AX,
+                MemfPos (Register ES, Register SI, Register BX) );
+            Comment (true, "END SUBSCRIPT");
+          ]
+        in
+        [
+          Pstring.create ~text:text_begin ();
+          address_pstring;
+          Pstring.create ~text:text_between ();
+          Variable.to_pstring v ~args ~locals;
+          Pstring.create ~text:text_end ();
+        ]
+        |> Pstring.concat
+end
+
 let rec eval_stmt_list ~scope ~args ~locals stmt_list =
   let eval_stmt_scope = eval_stmt ~scope ~args ~locals in
   List.map eval_stmt_scope stmt_list |> List.flatten
@@ -528,6 +572,13 @@ and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
                   Push (Word, Register AX);
                 ]
               ()
+        | OperationSubscript (address, offset) ->
+            [
+              Pstring.create ~text:[ Comment (true, "SUBSCRIPT") ] ();
+              Subscript.to_pstring ~args ~locals address offset;
+              Pstring.create ~text:[ Push (Word, Register AX) ] ();
+            ]
+            |> Pstring.concat
       in
       [ Pstring.create ~text:[ Comment (true, "OPERATIONS") ] () ]
       @ List.map pstring_of_operation opl
@@ -569,48 +620,8 @@ and eval_value ~args ~locals value : Pstring.t =
       let text = [ Mov (Word, Register AX, OpInt i) ] in
       Pstring.create ~text ()
   | Variable var -> Variable.to_pstring var ~args ~locals
-  | Subscript (address, offset) -> (
-      let address_pstring =
-        Pointer.to_pstring ~args ~locals ~segment:(Register DS) address
-      in
-      match offset with
-      | IntegerOffset i ->
-          let text_begin = [ Comment (true, "SUBSCRIPT") ]
-          and text_end =
-            [
-              Mov (Word, Register SI, Register AX);
-              Mov
-                (Word, Register AX, MemfPos (Register ES, Register SI, OpInt i));
-              Comment (true, "END SUBSCRIPT");
-            ]
-          in
-          [
-            Pstring.create ~text:text_begin ();
-            address_pstring;
-            Pstring.create ~text:text_end ();
-          ]
-          |> Pstring.concat
-      | VariableOffset v ->
-          let text_begin = [ Comment (true, "SUBSCRIPT") ]
-          and text_between = [ Mov (Word, Register SI, Register AX) ]
-          and text_end =
-            [
-              Mov (Word, Register BX, Register AX);
-              Mov
-                ( Word,
-                  Register AX,
-                  MemfPos (Register ES, Register SI, Register BX) );
-              Comment (true, "END SUBSCRIPT");
-            ]
-          in
-          [
-            Pstring.create ~text:text_begin ();
-            address_pstring;
-            Pstring.create ~text:text_between ();
-            Variable.to_pstring v ~args ~locals;
-            Pstring.create ~text:text_end ();
-          ]
-          |> Pstring.concat)
+  | Subscript (address, offset) ->
+      Subscript.to_pstring ~args ~locals address offset
   | String s ->
       let id =
         let replace_char = function '-' -> '_' | _ as c -> c in
