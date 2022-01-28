@@ -367,7 +367,7 @@ and eval_stmt ~scope ~args ~locals pstmt =
 and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
   match pexpr with
   | Value v -> eval_value ~args ~locals v
-  | N_Eq (is_eq, lv, rv) ->
+  | N_Eq (is_eq, st, lv, rv) ->
       let id =
         let replace_char = function '-' -> '_' | _ as c -> c in
         Uuidm.v4_gen (Random.State.make_self_init ()) ()
@@ -377,6 +377,9 @@ and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
       let new_scope =
         if is_eq then Printf.sprintf "%s.eq%s" scope id
         else Printf.sprintf "%s.neq%s" scope id
+      and a_dst_reg = match st with Byte -> Register AL | Word -> Register AX
+      and b_dst_reg =
+        match st with Byte -> Register BL | Word -> Register BX
       in
       let text_begin =
         [
@@ -385,10 +388,10 @@ and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
               if is_eq then Printf.sprintf "EQ<%s>" id
               else Printf.sprintf "NEQ<%s>" id );
         ]
-      and text_left_value = [ Mov (Word, Register BX, Register AX) ]
+      and text_left_value = [ Mov (st, b_dst_reg, a_dst_reg) ]
       and text_end =
         [
-          Cmp (Word, Register BX, Register AX);
+          Cmp (st, b_dst_reg, a_dst_reg);
           (if is_eq then Jne (OpLabel (Printf.sprintf "%s.false" new_scope))
           else Je (OpLabel (Printf.sprintf "%s.false" new_scope)));
           LabelDef (true, Printf.sprintf "%s.true" new_scope);

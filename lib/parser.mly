@@ -151,7 +151,11 @@ stmt:
       else BatDynArray.add current_func.locals l;
       LocalVar (l, v) }
   | LET;l=LABEL;ASSIGN;f=funccall 
-    { LocalVar (l, f) }
+    { let current_func = BatDynArray.last func_list in
+      if is_loc_name_redef l 
+      then raise @@ Exceptions.Label_redefinition l
+      else BatDynArray.add current_func.locals l;
+      LocalVar (l, f) }
   | l=address_value;ASSIGN;t=option(size_type);e=expr 
     { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
       Assignment (l,e,st) }
@@ -166,8 +170,12 @@ stmt:
   | sl=ASM { InlineASM sl }
 
 expr:
-  | LPAREN;lv=value;EQ;rv=value;RPAREN { N_Eq (true,lv,rv) }
-  | LPAREN;lv=value;NEQ;rv=value;RPAREN { N_Eq (false,lv,rv) }
+  | LPAREN;t=option(size_type);lv=value;EQ;rv=value;RPAREN 
+    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in 
+      N_Eq (true,st,lv,rv) }
+  | LPAREN;t=option(size_type);lv=value;NEQ;rv=value;RPAREN 
+    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in 
+      N_Eq (false,st,lv,rv) }
   | v=value { Value v }
   | LPAREN;v=value;RPAREN { Value v }
   | LPAREN;opl=operation+;RPAREN { Operations opl }

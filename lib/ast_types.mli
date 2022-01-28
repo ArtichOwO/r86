@@ -37,7 +37,7 @@ and stmt =
 
 and expr =
   | Value of value
-  | N_Eq of bool * value * value
+  | N_Eq of bool * size_type * value * value
   | Operations of operation list
   | FuncCallExpr of address_value * expr list
 
