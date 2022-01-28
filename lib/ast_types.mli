@@ -73,3 +73,7 @@ and operation =
   | OperationMul
   | OperationDiv
   | OperationMod
+  | OperationAnd
+  | OperationOr
+  | OperationXor
+  | OperationNot

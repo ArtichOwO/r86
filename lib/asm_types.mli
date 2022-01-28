@@ -63,5 +63,9 @@ and instruction =
   | Sub of operand * operand
   | Mul of operand
   | Div of operand
+  | And of operand * operand
+  | Or of operand * operand
+  | Xor of operand * operand
+  | Not of operand
   | Calln of operand
   | Callf of operand * operand

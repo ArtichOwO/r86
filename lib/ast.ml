@@ -485,6 +485,49 @@ and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
                   Push (Word, Register DX);
                 ]
               ()
+        | OperationAnd ->
+            Pstring.create
+              ~text:
+                [
+                  Comment (true, "AND");
+                  Pop (Word, Register BX);
+                  Pop (Word, Register AX);
+                  And (Register AX, Register BX);
+                  Push (Word, Register AX);
+                ]
+              ()
+        | OperationOr ->
+            Pstring.create
+              ~text:
+                [
+                  Comment (true, "OR");
+                  Pop (Word, Register BX);
+                  Pop (Word, Register AX);
+                  Or (Register AX, Register BX);
+                  Push (Word, Register AX);
+                ]
+              ()
+        | OperationXor ->
+            Pstring.create
+              ~text:
+                [
+                  Comment (true, "XOR");
+                  Pop (Word, Register BX);
+                  Pop (Word, Register AX);
+                  Xor (Register AX, Register BX);
+                  Push (Word, Register AX);
+                ]
+              ()
+        | OperationNot ->
+            Pstring.create
+              ~text:
+                [
+                  Comment (true, "NOT");
+                  Pop (Word, Register AX);
+                  Not (Register AX);
+                  Push (Word, Register AX);
+                ]
+              ()
       in
       [ Pstring.create ~text:[ Comment (true, "OPERATIONS") ] () ]
       @ List.map pstring_of_operation opl

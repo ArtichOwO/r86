@@ -31,6 +31,10 @@ rule translate = parse
   | '-' { HYPHEN }
   | '/' { SLASH }
   | '%' { PERCENT }
+  | '&' { AND }
+  | '|' { VERTICAL }
+  | '^' { CIRCUMFLEX }
+  | '~' { TILDE }
   | '"' { read_string lexbuf }
   | "for" { FOR }
   | "while" { WHILE }

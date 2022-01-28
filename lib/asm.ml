@@ -114,6 +114,16 @@ module Instruction = struct
             (Operand.to_string src)
       | Mul src -> sprintf "    mul %s" (Operand.to_string src)
       | Div src -> sprintf "    div %s" (Operand.to_string src)
+      | And (dst, src) ->
+          sprintf "    and %s, %s" (Operand.to_string dst)
+            (Operand.to_string src)
+      | Or (dst, src) ->
+          sprintf "    or %s, %s" (Operand.to_string dst)
+            (Operand.to_string src)
+      | Xor (dst, src) ->
+          sprintf "    xor %s, %s" (Operand.to_string dst)
+            (Operand.to_string src)
+      | Not src -> sprintf "    not %s" (Operand.to_string src)
       | Calln address -> sprintf "    call %s" (Operand.to_string address)
       | Callf (segment, address) ->
           sprintf "    call %s:%s"

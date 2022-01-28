@@ -44,6 +44,10 @@
 %token HYPHEN
 %token SLASH
 %token PERCENT
+%token AND
+%token VERTICAL
+%token CIRCUMFLEX
+%token TILDE
 
 %token LET
 %token FOR
@@ -236,3 +240,7 @@ operation:
   | HYPHEN { OperationSub }
   | SLASH { OperationDiv }
   | PERCENT { OperationMod }
+  | AND { OperationAnd }
+  | VERTICAL { OperationOr }
+  | CIRCUMFLEX { OperationXor }
+  | TILDE { OperationNot }
