@@ -44,6 +44,7 @@ rule translate = parse
   | "false" { FALSE }
   | "null" { NULL }
   | "NULL" { NULL }
+  | "asm" { ASM }
   | "==" { EQ }
   | "!=" { NEQ }
   | dec_digit+ as i { INTEGER (int_of_string i) }

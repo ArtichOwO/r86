@@ -355,6 +355,14 @@ and eval_stmt ~scope ~args ~locals pstmt =
               ]
             ();
         ]
+  | InlineASM sl ->
+      let instr_of_string t = Text t in
+      let text =
+        [ Comment (true, "INLINE ASM") ]
+        @ List.map instr_of_string sl
+        @ [ Newline ]
+      in
+      [ Pstring.create ~text () ]
 
 and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
   match pexpr with

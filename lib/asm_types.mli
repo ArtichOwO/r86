@@ -36,6 +36,7 @@ and operand =
 
 and instruction =
   | Newline
+  | Text of string
   | Comment of bool * string
   | Global of string list
   | Extern of string list

@@ -74,6 +74,7 @@ module Instruction = struct
     let instr_str =
       match instr with
       | Newline -> ""
+      | Text t -> sprintf "    %s" t
       | Comment (indent, s) ->
           if indent then sprintf "    ; %s" s else sprintf "; %s" s
       | Global globals -> sprintf "GLOBAL %s" (String.concat "," globals)
