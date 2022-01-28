@@ -2,6 +2,7 @@
   open Parser
 
   let buf = Buffer.create 64
+  let asm_buf : string BatDynArray.t = BatDynArray.create ()
 }
 
 let newline = '\n' | "\r\n"
@@ -44,7 +45,7 @@ rule translate = parse
   | "false" { FALSE }
   | "null" { NULL }
   | "NULL" { NULL }
-  | "asm" { ASM }
+  | "asm {" { read_asm lexbuf; ASM (BatDynArray.to_list asm_buf) }
   | "==" { EQ }
   | "!=" { NEQ }
   | dec_digit+ as i { INTEGER (int_of_string i) }
@@ -75,5 +76,19 @@ and special_char = parse
 and get_int_value = parse
   | hex_digit hex_digit as i { Printf.sprintf "0x%s" i |> int_of_string |> Char.chr }
   | _ { raise @@ Exceptions.Invalid_character (get_next_char lexbuf) }
+
+and read_asm = parse
+  | '}' { let c = Buffer.contents buf |> String.trim in 
+          match c with "" -> () | _ -> BatDynArray.add asm_buf c;
+          Buffer.clear buf }
+  | '\n' { let c = Buffer.contents buf |> String.trim in 
+           match c with 
+           | "" -> Buffer.clear buf; read_asm lexbuf 
+           | _ -> BatDynArray.add asm_buf c; 
+                  Buffer.clear buf; 
+                  read_asm lexbuf }
+  | [^ '\n' '}'] { Buffer.add_string buf (Lexing.lexeme lexbuf); read_asm lexbuf }
+  | eof { raise Exceptions.String_never_terminated }
+  | _ as c { raise @@ Exceptions.Invalid_character c }
 
 and get_next_char = parse _ as c { c }

@@ -50,7 +50,7 @@
 %token TRUE FALSE
 %token NULL
 
-%token ASM
+%token <string list> ASM
 
 %token ASSIGN
 %token EQ NEQ
@@ -157,7 +157,7 @@ stmt:
       SubAssignment (l,(IntegerOffset 0),e,st) }
   | func=address_value;LPAREN;el=funccall_argument*;RPAREN
     { FuncCall (func, el) }
-  | ASM;LBRACE;sl=STRING*;RBRACE { InlineASM sl }
+  | sl=ASM { InlineASM sl }
 
 funccall_argument:
   | e=expr;option(COMMA) { e }
