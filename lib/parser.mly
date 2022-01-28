@@ -122,6 +122,7 @@ func_decl: ig=option(GLOBAL);ftype=function_type;fname=LABEL;LPAREN;args=argumen
 
 stmt:
   | IF;i=expr;LBRACE;t=stmt*;RBRACE { If (i,t) }
+  | IF;i=expr;LBRACE;t=stmt*;RBRACE;ELSE;LBRACE;f=stmt*;RBRACE { IfElse (i,t,f) }
   | FOR;LPAREN;init=option(stmt);SEMICOLON;
     condition=option(expr);SEMICOLON;
     inc=option(stmt);RPAREN;LBRACE;sl=stmt*;RBRACE 

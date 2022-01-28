@@ -132,6 +132,47 @@ and eval_stmt ~scope ~args ~locals pstmt =
       ]
       @ eval_stmt_list ~scope ~args ~locals sl
       @ [ Pstring.create ~text:text_end () ]
+  | IfElse (e, t, f) ->
+      let id =
+        let replace_char = function '-' -> '_' | _ as c -> c in
+        Uuidm.v4_gen (Random.State.make_self_init ()) ()
+        |> Uuidm.to_string ~upper:true
+        |> String.map replace_char
+      in
+      let new_scope = Printf.sprintf "%s.ifelse%s" scope id in
+
+      let text_begin =
+        [
+          Comment (true, Printf.sprintf "IF ELSE<%s>" id);
+          LabelDef (true, new_scope);
+          Newline;
+        ]
+      and text_between =
+        [
+          Newline;
+          Cmp (Word, Register AX, OpInt 0);
+          Jnz (OpLabel (Printf.sprintf "%s.false" new_scope));
+          LabelDef (true, Printf.sprintf "%s.true" new_scope);
+          Newline;
+        ]
+      and text_false =
+        [
+          Jmpn (OpLabel (Printf.sprintf "%s.end" new_scope));
+          LabelDef (true, Printf.sprintf "%s.false" new_scope);
+          Newline;
+        ]
+      and text_end =
+        [ LabelDef (true, Printf.sprintf "%s.end" new_scope); Newline ]
+      in
+      [
+        Pstring.create ~text:text_begin ();
+        eval_expr ~scope ~args ~locals e;
+        Pstring.create ~text:text_between ();
+      ]
+      @ eval_stmt_list ~scope ~args ~locals t
+      @ [ Pstring.create ~text:text_false () ]
+      @ eval_stmt_list ~scope ~args ~locals f
+      @ [ Pstring.create ~text:text_end () ]
   | For (init, condition, inc, sl) ->
       let id =
         let replace_char = function '-' -> '_' | _ as c -> c in

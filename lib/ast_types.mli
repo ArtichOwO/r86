@@ -26,6 +26,7 @@ and label = string
 
 and stmt =
   | If of expr * stmt list
+  | IfElse of expr * stmt list * stmt list
   | For of stmt option * expr option * stmt option * stmt list
   | WhileUntil of expr option * bool * stmt list
   | LocalVar of string * value
