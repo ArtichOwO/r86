@@ -118,7 +118,7 @@ and eval_stmt ~scope ~args ~locals pstmt =
         [
           Newline;
           Cmp (Word, Register AX, OpInt 0);
-          Jnz (OpLabel (Printf.sprintf "%s.end" new_scope));
+          Jz (OpLabel (Printf.sprintf "%s.end" new_scope));
           Newline;
         ]
       and text_end =
@@ -151,7 +151,7 @@ and eval_stmt ~scope ~args ~locals pstmt =
         [
           Newline;
           Cmp (Word, Register AX, OpInt 0);
-          Jnz (OpLabel (Printf.sprintf "%s.false" new_scope));
+          Jz (OpLabel (Printf.sprintf "%s.false" new_scope));
           LabelDef (true, Printf.sprintf "%s.true" new_scope);
           Newline;
         ]
