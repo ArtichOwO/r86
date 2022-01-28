@@ -269,9 +269,9 @@ and eval_stmt ~scope ~args ~locals pstmt =
               ]
             ();
         ]
-  | LocalVar (_, value) ->
+  | LocalVar (_, expr) ->
       let text = [ Push (Word, Register AX) ] in
-      [ eval_value ~args ~locals value; Pstring.create ~text () ]
+      [ eval_expr ~scope ~args ~locals expr; Pstring.create ~text () ]
   | Assignment (address, expr, stype) ->
       let dest_reg =
         match stype with Byte -> Register AL | Word -> Register AX
@@ -487,6 +487,31 @@ and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
       @ [
           Pstring.create
             ~text:[ Comment (true, "RESULT"); Pop (Word, Register AX) ]
+            ();
+        ]
+      |> Pstring.concat
+  | FuncCallExpr (func, el) ->
+      let text_begin = [ Comment (true, "FUNC CALL") ]
+      and eval_expr_push expr =
+        [
+          eval_expr ~scope ~args ~locals expr;
+          Pstring.create ~text:[ Push (Word, Register AX) ] ();
+        ]
+        |> Pstring.concat
+      in
+      [ Pstring.create ~text:text_begin () ]
+      @ List.map eval_expr_push el
+      @ [
+          Pointer.to_pstring ~args ~locals ~segment:(Register CS) func;
+          Pstring.create
+            ~text:
+              [
+                (match func with
+                | VariableAddress _ -> Newline
+                | _ -> Push (Word, Register ES));
+                Calln (Register AX);
+                Add (Register SP, OpInt (List.length el * 2));
+              ]
             ();
         ]
       |> Pstring.concat

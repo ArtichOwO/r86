@@ -143,13 +143,15 @@ stmt:
       if is_loc_name_redef l 
       then raise @@ Exceptions.Label_redefinition l
       else BatDynArray.add current_func.locals l;
-      LocalVar (l, (Integer 0)) }
-  | LET;l=LABEL;ASSIGN;v=value 
+      LocalVar (l, Value (Integer 0)) }
+  | LET;l=LABEL;ASSIGN;v=expr 
     { let current_func = BatDynArray.last func_list in
       if is_loc_name_redef l 
       then raise @@ Exceptions.Label_redefinition l
       else BatDynArray.add current_func.locals l;
       LocalVar (l, v) }
+  | LET;l=LABEL;ASSIGN;f=funccall 
+    { LocalVar (l, f) }
   | l=address_value;ASSIGN;t=option(size_type);e=expr 
     { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
       Assignment (l,e,st) }
@@ -163,15 +165,19 @@ stmt:
     { FuncCall (func, el) }
   | sl=ASM { InlineASM sl }
 
-funccall_argument:
-  | e=expr;option(COMMA) { e }
-
 expr:
   | LPAREN;lv=value;EQ;rv=value;RPAREN { N_Eq (true,lv,rv) }
   | LPAREN;lv=value;NEQ;rv=value;RPAREN { N_Eq (false,lv,rv) }
   | v=value { Value v }
   | LPAREN;v=value;RPAREN { Value v }
   | LPAREN;opl=operation+;RPAREN { Operations opl }
+  
+funccall:
+  | func=address_value;LPAREN;el=funccall_argument*;RPAREN
+    { FuncCallExpr (func, el) }
+
+funccall_argument:
+  | e=expr;option(COMMA) { e }
 
 value:
   | i=INTEGER { Integer i }

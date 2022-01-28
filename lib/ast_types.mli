@@ -29,7 +29,7 @@ and stmt =
   | IfElse of expr * stmt list * stmt list
   | For of stmt option * expr option * stmt option * stmt list
   | WhileUntil of expr option * bool * stmt list
-  | LocalVar of string * value
+  | LocalVar of string * expr
   | Assignment of address_value * expr * size_type
   | SubAssignment of address_value * offset_value * expr * size_type
   | FuncCall of address_value * expr list
@@ -39,6 +39,7 @@ and expr =
   | Value of value
   | N_Eq of bool * value * value
   | Operations of operation list
+  | FuncCallExpr of address_value * expr list
 
 and function_type = Near
 
