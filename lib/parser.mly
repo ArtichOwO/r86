@@ -40,6 +40,10 @@
 %token LBRACK RBRACK
 
 %token ASTERISK
+%token PLUS
+%token HYPHEN
+%token SLASH
+%token PERCENT
 
 %token LET
 %token FOR
@@ -167,6 +171,7 @@ expr:
   | LPAREN;lv=value;NEQ;rv=value;RPAREN { N_Eq (false,lv,rv) }
   | v=value { Value v }
   | LPAREN;v=value;RPAREN { Value v }
+  | LPAREN;opl=operation+;RPAREN { Operations opl }
 
 value:
   | i=INTEGER { Integer i }
@@ -206,3 +211,12 @@ address_operand:
 static_value:
   | i=INTEGER { StaticInteger i }
   | s=STRING { StaticString s }
+
+operation:
+  | i=INTEGER { OperationInt i }
+  | v=LABEL { OperationVar v }
+  | PLUS { OperationAdd }
+  | ASTERISK { OperationMul }
+  | HYPHEN { OperationSub }
+  | SLASH { OperationDiv }
+  | PERCENT { OperationMod }

@@ -35,7 +35,10 @@ and stmt =
   | FuncCall of address_value * expr list
   | InlineASM of string list
 
-and expr = Value of value | N_Eq of bool * value * value
+and expr =
+  | Value of value
+  | N_Eq of bool * value * value
+  | Operations of operation list
 
 and function_type = Near
 
@@ -59,3 +62,12 @@ and address_operand = IntegerAddressOp of int | VariableAddressOp of string
 and static_value = StaticInteger of int | StaticString of string
 
 and arguments = string * int
+
+and operation =
+  | OperationInt of int
+  | OperationVar of string
+  | OperationAdd
+  | OperationSub
+  | OperationMul
+  | OperationDiv
+  | OperationMod

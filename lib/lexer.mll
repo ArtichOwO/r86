@@ -27,6 +27,10 @@ rule translate = parse
   | '[' { LBRACK }
   | ']' { RBRACK }
   | '*' { ASTERISK }
+  | '+' { PLUS }
+  | '-' { HYPHEN }
+  | '/' { SLASH }
+  | '%' { PERCENT }
   | '"' { read_string lexbuf }
   | "for" { FOR }
   | "while" { WHILE }

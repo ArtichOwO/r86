@@ -407,6 +407,89 @@ and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
         Pstring.create ~text:text_end ();
       ]
       |> Pstring.concat
+  | Operations opl ->
+      let pstring_of_operation = function
+        | OperationInt i ->
+            Pstring.create
+              ~text:
+                [
+                  Comment (true, Printf.sprintf "INT<%i>" i);
+                  Push (Word, OpInt i);
+                ]
+              ()
+        | OperationVar v ->
+            [
+              Pstring.create
+                ~text:[ Comment (true, Printf.sprintf "VAR<%s>" v) ]
+                ();
+              Variable.to_pstring ~args ~locals v;
+              Pstring.create ~text:[ Push (Word, Register AX) ] ();
+            ]
+            |> Pstring.concat
+        | OperationAdd ->
+            Pstring.create
+              ~text:
+                [
+                  Comment (true, "ADD");
+                  Pop (Word, Register BX);
+                  Pop (Word, Register AX);
+                  Add (Register AX, Register BX);
+                  Push (Word, Register AX);
+                ]
+              ()
+        | OperationSub ->
+            Pstring.create
+              ~text:
+                [
+                  Comment (true, "SUB");
+                  Pop (Word, Register BX);
+                  Pop (Word, Register AX);
+                  Sub (Register AX, Register BX);
+                  Push (Word, Register AX);
+                ]
+              ()
+        | OperationMul ->
+            Pstring.create
+              ~text:
+                [
+                  Comment (true, "MUL");
+                  Pop (Word, Register BX);
+                  Pop (Word, Register AX);
+                  Mul (Register BX);
+                  Push (Word, Register AX);
+                ]
+              ()
+        | OperationDiv ->
+            Pstring.create
+              ~text:
+                [
+                  Comment (true, "DIV");
+                  Pop (Word, Register CX);
+                  Pop (Word, Register AX);
+                  Div (Register CX);
+                  Push (Word, Register AX);
+                ]
+              ()
+        | OperationMod ->
+            Pstring.create
+              ~text:
+                [
+                  Comment (true, "MOD");
+                  Pop (Word, Register CX);
+                  Pop (Word, Register AX);
+                  Div (Register CX);
+                  Push (Word, Register DX);
+                ]
+              ()
+      in
+      [ Pstring.create ~text:[ Comment (true, "OPERATIONS") ] () ]
+      @ List.map pstring_of_operation opl
+      @ [
+          Pstring.create
+            ~text:[ Comment (true, "RESULT"); Pop (Word, Register AX) ]
+            ();
+        ]
+      |> Pstring.concat
 
 and eval_value ~args ~locals value : Pstring.t =
   match value with
