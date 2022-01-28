@@ -47,6 +47,9 @@
 %token UNTIL
 %token IF ELSE
 
+%token TRUE FALSE
+%token NULL
+
 %token ASSIGN
 %token EQ NEQ
 %token NEAR FAR INT
@@ -171,6 +174,9 @@ value:
       Variable v }
   | address=address_value;LBRACK;offset=offset_value;RBRACK { Subscript (address,offset) }
   | ASTERISK;address=address_value { Subscript (address,(IntegerOffset 0)) }
+  | TRUE { Integer 1 }
+  | FALSE { Integer 0 }
+  | NULL { Integer 0 }
 
 offset_value:
   | i=INTEGER { IntegerOffset i }

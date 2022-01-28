@@ -40,6 +40,10 @@ rule translate = parse
   | "byte" { BYTE }
   | "word" { WORD }
   | "let" { LET }
+  | "true" { TRUE }
+  | "false" { FALSE }
+  | "null" { NULL }
+  | "NULL" { NULL }
   | "==" { EQ }
   | "!=" { NEQ }
   | dec_digit+ as i { INTEGER (int_of_string i) }
