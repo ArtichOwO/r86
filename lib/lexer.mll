@@ -45,7 +45,7 @@ rule translate = parse
   | "false" { FALSE }
   | "null" { NULL }
   | "NULL" { NULL }
-  | "asm {" { read_asm lexbuf; ASM (BatDynArray.to_list asm_buf) }
+  | "asm" { start_read_asm lexbuf }
   | "==" { EQ }
   | "!=" { NEQ }
   | dec_digit+ as i { INTEGER (int_of_string i) }
@@ -77,6 +77,11 @@ and get_int_value = parse
   | hex_digit hex_digit as i { Printf.sprintf "0x%s" i |> int_of_string |> Char.chr }
   | _ { raise @@ Exceptions.Invalid_character (get_next_char lexbuf) }
 
+and start_read_asm = parse
+  | '{' { read_asm lexbuf; ASM (BatDynArray.to_list asm_buf) }
+  | whitespace { start_read_asm lexbuf }
+  | _ { raise Exceptions.Asm_never_starts }
+
 and read_asm = parse
   | '}' { let c = Buffer.contents buf |> String.trim in 
           match c with "" -> () | _ -> BatDynArray.add asm_buf c;
@@ -88,7 +93,7 @@ and read_asm = parse
                   Buffer.clear buf; 
                   read_asm lexbuf }
   | [^ '\n' '}'] { Buffer.add_string buf (Lexing.lexeme lexbuf); read_asm lexbuf }
-  | eof { raise Exceptions.String_never_terminated }
+  | eof { raise Exceptions.Asm_never_terminated }
   | _ as c { raise @@ Exceptions.Invalid_character c }
 
 and get_next_char = parse _ as c { c }

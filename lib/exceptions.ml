@@ -4,6 +4,10 @@ exception Invalid_character of char
 
 exception String_never_terminated
 
+exception Asm_never_starts
+
+exception Asm_never_terminated
+
 (* Parsing errors *)
 
 exception Pointer_overflow

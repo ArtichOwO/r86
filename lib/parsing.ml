@@ -35,6 +35,8 @@ let parse lexbuf =
            (match error with
            | Invalid_character c -> Printf.sprintf "Invalid character `%c`" c
            | String_never_terminated -> "String never terminated"
+           | Asm_never_starts -> "Inline assembly never starts"
+           | Asm_never_terminated -> "Inline assembly never terminated"
            | Parser.Error -> "Syntax error"
            | Pointer_overflow -> "Pointer value overflow"
            | Integer_overflow -> "Integer overflow"
