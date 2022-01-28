@@ -50,6 +50,7 @@
 %token WHILE
 %token UNTIL
 %token IF ELSE
+%token RETURN
 
 %token TRUE FALSE
 %token NULL
@@ -168,6 +169,7 @@ stmt:
   | func=address_value;LPAREN;el=funccall_argument*;RPAREN
     { FuncCall (func, el) }
   | sl=ASM { InlineASM sl }
+  | RETURN;e=expr { Return e }
 
 expr:
   | LPAREN;t=option(size_type);lv=value;EQ;rv=value;RPAREN 

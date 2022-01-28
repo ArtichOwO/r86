@@ -45,6 +45,7 @@ rule translate = parse
   | "byte" { BYTE }
   | "word" { WORD }
   | "let" { LET }
+  | "return" { RETURN }
   | "true" { TRUE }
   | "false" { FALSE }
   | "null" { NULL }

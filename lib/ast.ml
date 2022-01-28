@@ -363,6 +363,7 @@ and eval_stmt ~scope ~args ~locals pstmt =
         @ [ Newline ]
       in
       [ Pstring.create ~text () ]
+  | Return e -> [ eval_expr ~scope ~args ~locals e ]
 
 and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
   match pexpr with
