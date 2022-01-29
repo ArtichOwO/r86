@@ -1,29 +1,29 @@
 (lang dune 2.9)
-(name ArtiLang)
+(name r86)
 (using menhir 2.1)
 
-(version 0.0.1)
+(version 0.1.0)
 
 (license "GPL-3.0")
 
-(authors "The ArtiLang programmers")
+(authors "The r86 programmers")
 
 (maintainers "lelolartichaut@laposte.net")
 
 (source
- (github ArtichOwO/ArtiLang))
+ (github ArtichOwO/r86))
 
-(bug_reports "https://github.com/ArtichOwO/ArtiLang/issues")
+(bug_reports "https://github.com/ArtichOwO/r86/issues")
 
-(homepage "https://github.com/ArtichOwO/ArtiLang")
+(homepage "https://github.com/ArtichOwO/r86")
 
 (generate_opam_files true)
 
 (package
- (name ArtiLang)
+ (name r86)
  (synopsis "8086 real mode programming language")
  (description
-  "ArtiLang is a 8086 real mode programming language which supports segmentation.")
+  "r86 is a 8086 real mode programming language which supports segmentation.")
  (depends
   dune
   (ocaml
