@@ -95,7 +95,13 @@ defs:
       then raise @@ Exceptions.Label_redefinition sname
       else BatDynArray.add func_list { name=sname; args=[]; locals=(BatDynArray.create ())};
       let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
-      StaticVarUninitialized { is_global; stype; sname } }
+      StaticVarUninitialized { is_global; stype; sname; size = 1 } }
+  | ig=option(GLOBAL);stype=size_type;sname=LABEL;LBRACK;i=INTEGER;RBRACK
+    { if is_top_name_redef sname 
+      then raise @@ Exceptions.Label_redefinition sname
+      else BatDynArray.add func_list { name=sname; args=[]; locals=(BatDynArray.create ())};
+      let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
+      StaticVarUninitialized { is_global; stype; sname; size = i } }
   | ig=option(GLOBAL);stype=size_type;sname=LABEL;ASSIGN;value=static_value
     { if is_top_name_redef sname 
       then raise @@ Exceptions.Label_redefinition sname

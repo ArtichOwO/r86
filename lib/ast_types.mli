@@ -13,6 +13,7 @@ and defs =
       is_global : bool;
       stype : size_type;
       sname : string;
+      size : int;
     }
   | StaticVar of {
       is_global : bool;

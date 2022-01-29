@@ -689,9 +689,9 @@ and eval_defs = function
         stmt_list_pstring;
         Pstring.create ~text:text_end ();
       ]
-  | StaticVarUninitialized { is_global; stype; sname } ->
+  | StaticVarUninitialized { is_global; stype; sname; size } ->
       let header = if is_global then [ Global [ sname ] ] else []
-      and mnemo = match stype with Byte -> Resb 1 | Word -> Resw 1 in
+      and mnemo = match stype with Byte -> Resb size | Word -> Resw size in
       [ Pstring.create ~header ~bss:[ LabelDef (false, sname); mnemo ] () ]
   | StaticVar { is_global; stype; sname; value } ->
       let header = if is_global then [ Global [ sname ] ] else []
