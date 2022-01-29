@@ -3,7 +3,7 @@ open Asm_types
 
 module Pointer = struct
   module Operand = struct
-    let to_pstring ~args ~locals var =
+    let to_pstring ~args ~locals ~functype var =
       match var with
       | IntegerAddressOp i ->
           let text = [ Mov (Word, Register AX, OpInt i) ] in
@@ -16,7 +16,11 @@ module Pointer = struct
                 Mov
                   ( Word,
                     Register AX,
-                    MemnPos (Register BP, OpInt ((offset * 2) + 4)) );
+                    MemnPos
+                      ( Register BP,
+                        OpInt
+                          ((offset * 2)
+                          + match functype with Near -> 4 | Far -> 6) ) );
               ]
             else if List.mem_assoc v locals then
               let offset = List.assoc v locals in
@@ -31,7 +35,7 @@ module Pointer = struct
           Pstring.create ~text ()
   end
 
-  let to_pstring ~args ~locals ~segment var =
+  let to_pstring ~args ~locals ~segment ~functype var =
     match var with
     | IntegerAddress (s, o) ->
         let text =
@@ -50,7 +54,10 @@ module Pointer = struct
               Mov (Word, Register AX, Register SS);
               Mov (Word, Register ES, Register AX);
               Mov (Word, Register AX, Register BP);
-              Add (Register AX, OpInt ((offset * 2) + 4));
+              Add
+                ( Register AX,
+                  OpInt
+                    ((offset * 2) + match functype with Near -> 4 | Far -> 6) );
             ]
           else if List.mem_assoc v locals then
             let offset = List.assoc v locals in
@@ -71,9 +78,9 @@ module Pointer = struct
     | ComposedAddress (segment, address) ->
         let text = [ Mov (Word, Register ES, Register AX) ] in
         [
-          Operand.to_pstring ~args ~locals segment;
+          Operand.to_pstring ~args ~locals ~functype segment;
           Pstring.create ~text ();
-          Operand.to_pstring ~args ~locals address;
+          Operand.to_pstring ~args ~locals ~functype address;
         ]
         |> Pstring.concat
 end
@@ -99,9 +106,9 @@ module Variable = struct
 end
 
 module Subscript = struct
-  let to_pstring ~args ~locals address offset =
+  let to_pstring ~args ~locals ~functype address offset =
     let address_pstring =
-      Pointer.to_pstring ~args ~locals ~segment:(Register DS) address
+      Pointer.to_pstring ~args ~locals ~functype ~segment:(Register DS) address
     in
     match offset with
     | IntegerOffset i ->
@@ -142,11 +149,11 @@ module Subscript = struct
         |> Pstring.concat
 end
 
-let rec eval_stmt_list ~scope ~args ~locals stmt_list =
-  let eval_stmt_scope = eval_stmt ~scope ~args ~locals in
+let rec eval_stmt_list ~scope ~args ~locals ~functype stmt_list =
+  let eval_stmt_scope = eval_stmt ~scope ~args ~locals ~functype in
   List.map eval_stmt_scope stmt_list |> List.flatten
 
-and eval_stmt ~scope ~args ~locals pstmt =
+and eval_stmt ~scope ~args ~locals ~functype pstmt =
   match pstmt with
   | If (e, sl) ->
       let id =
@@ -175,10 +182,10 @@ and eval_stmt ~scope ~args ~locals pstmt =
 
       [
         Pstring.create ~text:text_begin ();
-        eval_expr ~scope ~args ~locals e;
+        eval_expr ~scope ~args ~locals ~functype e;
         Pstring.create ~text:text_between ();
       ]
-      @ eval_stmt_list ~scope ~args ~locals sl
+      @ eval_stmt_list ~scope ~args ~locals ~functype sl
       @ [ Pstring.create ~text:text_end () ]
   | IfElse (e, t, f) ->
       let id =
@@ -214,12 +221,12 @@ and eval_stmt ~scope ~args ~locals pstmt =
       in
       [
         Pstring.create ~text:text_begin ();
-        eval_expr ~scope ~args ~locals e;
+        eval_expr ~scope ~args ~locals ~functype e;
         Pstring.create ~text:text_between ();
       ]
-      @ eval_stmt_list ~scope ~args ~locals t
+      @ eval_stmt_list ~scope ~args ~locals ~functype t
       @ [ Pstring.create ~text:text_false () ]
-      @ eval_stmt_list ~scope ~args ~locals f
+      @ eval_stmt_list ~scope ~args ~locals ~functype f
       @ [ Pstring.create ~text:text_end () ]
   | For (init, condition, inc, sl) ->
       let id =
@@ -234,7 +241,7 @@ and eval_stmt ~scope ~args ~locals pstmt =
         Pstring.create ~text:[ Comment (true, Printf.sprintf "FOR<%s>" id) ] ();
       ]
       @ (match init with
-        | Some init_stmt -> eval_stmt ~scope ~args ~locals init_stmt
+        | Some init_stmt -> eval_stmt ~scope ~args ~locals ~functype init_stmt
         | None -> [])
       @ [
           Pstring.create
@@ -245,7 +252,7 @@ and eval_stmt ~scope ~args ~locals pstmt =
       @ (match condition with
         | Some condition_expr ->
             [
-              eval_expr ~scope ~args ~locals condition_expr;
+              eval_expr ~scope ~args ~locals ~functype condition_expr;
               Pstring.create
                 ~text:
                   [
@@ -256,9 +263,9 @@ and eval_stmt ~scope ~args ~locals pstmt =
                 ();
             ]
         | None -> [])
-      @ eval_stmt_list ~scope ~args ~locals sl
+      @ eval_stmt_list ~scope ~args ~locals ~functype sl
       @ (match inc with
-        | Some inc_stmt -> eval_stmt ~scope ~args ~locals inc_stmt
+        | Some inc_stmt -> eval_stmt ~scope ~args ~locals ~functype inc_stmt
         | None -> [])
       @ [
           Pstring.create
@@ -292,7 +299,7 @@ and eval_stmt ~scope ~args ~locals pstmt =
           ();
       ]
       @ [
-          eval_expr ~scope ~args ~locals condition;
+          eval_expr ~scope ~args ~locals ~functype condition;
           Pstring.create
             ~text:
               [
@@ -304,7 +311,7 @@ and eval_stmt ~scope ~args ~locals pstmt =
               ]
             ();
         ]
-      @ eval_stmt_list ~scope ~args ~locals sl
+      @ eval_stmt_list ~scope ~args ~locals ~functype sl
       @ [
           Pstring.create
             ~text:
@@ -316,7 +323,7 @@ and eval_stmt ~scope ~args ~locals pstmt =
         ]
   | LocalVar (_, expr) ->
       let text = [ Push (Word, Register AX) ] in
-      [ eval_expr ~scope ~args ~locals expr; Pstring.create ~text () ]
+      [ eval_expr ~scope ~args ~locals ~functype expr; Pstring.create ~text () ]
   | Assignment (address, expr, stype) ->
       let dest_reg =
         match stype with Byte -> Register AL | Word -> Register AX
@@ -326,9 +333,10 @@ and eval_stmt ~scope ~args ~locals pstmt =
         [ Mov (stype, Memf (Register ES, Register DI), dest_reg) ]
       in
       [
-        Pointer.to_pstring address ~args ~locals ~segment:(Register DS);
+        Pointer.to_pstring address ~args ~locals ~functype
+          ~segment:(Register DS);
         Pstring.create ~text:address_text ();
-        eval_expr ~scope ~args ~locals expr;
+        eval_expr ~scope ~args ~locals ~functype expr;
         Pstring.create ~text:expr_text ();
       ]
   | SubAssignment (address, offset, expr, stype) ->
@@ -371,16 +379,17 @@ and eval_stmt ~scope ~args ~locals pstmt =
       in
       [
         Pstring.create ~text:text_begin ();
-        Pointer.to_pstring address ~args ~locals ~segment:(Register DS);
+        Pointer.to_pstring address ~args ~locals ~functype
+          ~segment:(Register DS);
         Pstring.create ~text:text_between ();
-        eval_expr ~scope ~args ~locals expr;
+        eval_expr ~scope ~args ~locals ~functype expr;
         ptext_end;
       ]
   | FuncCall (func, el) ->
       let text_begin = [ Comment (true, "FUNC CALL") ]
       and eval_expr_push expr =
         [
-          eval_expr ~scope ~args ~locals expr;
+          eval_expr ~scope ~args ~locals ~functype expr;
           Pstring.create ~text:[ Push (Word, Register AX) ] ();
         ]
         |> Pstring.concat
@@ -388,7 +397,7 @@ and eval_stmt ~scope ~args ~locals pstmt =
       [ Pstring.create ~text:text_begin () ]
       @ List.map eval_expr_push el
       @ [
-          Pointer.to_pstring ~args ~locals ~segment:(Register CS) func;
+          Pointer.to_pstring ~args ~locals ~functype ~segment:(Register CS) func;
           Pstring.create
             ~text:
               [
@@ -408,11 +417,11 @@ and eval_stmt ~scope ~args ~locals pstmt =
         @ [ Newline ]
       in
       [ Pstring.create ~text () ]
-  | Return e -> [ eval_expr ~scope ~args ~locals e ]
+  | Return e -> [ eval_expr ~scope ~args ~locals ~functype e ]
 
-and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
+and eval_expr ~scope ~args ~locals ~functype pexpr : Pstring.t =
   match pexpr with
-  | Value v -> eval_value ~args ~locals v
+  | Value v -> eval_value ~args ~locals ~functype v
   | N_Eq (is_eq, st, lv, rv) ->
       let id =
         let replace_char = function '-' -> '_' | _ as c -> c in
@@ -450,9 +459,9 @@ and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
       in
       [
         Pstring.create ~text:text_begin ();
-        eval_value ~args ~locals lv;
+        eval_value ~args ~locals ~functype lv;
         Pstring.create ~text:text_left_value ();
-        eval_value ~args ~locals rv;
+        eval_value ~args ~locals ~functype rv;
         Pstring.create ~text:text_end ();
       ]
       |> Pstring.concat
@@ -576,7 +585,7 @@ and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
         | OperationSubscript (address, offset) ->
             [
               Pstring.create ~text:[ Comment (true, "SUBSCRIPT") ] ();
-              Subscript.to_pstring ~args ~locals address offset;
+              Subscript.to_pstring ~args ~locals ~functype address offset;
               Pstring.create ~text:[ Push (Word, Register AX) ] ();
             ]
             |> Pstring.concat
@@ -593,7 +602,7 @@ and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
       let text_begin = [ Comment (true, "FUNC CALL") ]
       and eval_expr_push expr =
         [
-          eval_expr ~scope ~args ~locals expr;
+          eval_expr ~scope ~args ~locals ~functype expr;
           Pstring.create ~text:[ Push (Word, Register AX) ] ();
         ]
         |> Pstring.concat
@@ -601,7 +610,7 @@ and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
       [ Pstring.create ~text:text_begin () ]
       @ List.map eval_expr_push el
       @ [
-          Pointer.to_pstring ~args ~locals ~segment:(Register CS) func;
+          Pointer.to_pstring ~args ~locals ~functype ~segment:(Register CS) func;
           Pstring.create
             ~text:
               [
@@ -615,14 +624,14 @@ and eval_expr ~scope ~args ~locals pexpr : Pstring.t =
         ]
       |> Pstring.concat
 
-and eval_value ~args ~locals value : Pstring.t =
+and eval_value ~args ~locals ~functype value : Pstring.t =
   match value with
   | Integer i ->
       let text = [ Mov (Word, Register AX, OpInt i) ] in
       Pstring.create ~text ()
   | Variable var -> Variable.to_pstring var ~args ~locals
   | Subscript (address, offset) ->
-      Subscript.to_pstring ~args ~locals address offset
+      Subscript.to_pstring ~args ~locals ~functype address offset
   | String s ->
       let id =
         let replace_char = function '-' -> '_' | _ as c -> c in
@@ -640,7 +649,7 @@ let rec eval_program defs_list =
   |> Pstring.concat |> Pstring.to_string
 
 and eval_defs = function
-  | FuncDef { is_global; ftype; fname; args; stmt_list; locals } -> (
+  | FuncDef { is_global; ftype; fname; args; stmt_list; locals } ->
       let rec create_arg_idx ?(index = 0) ?(args_list = []) ~args_string () =
         if List.length args_string = index then args_list
         else
@@ -652,29 +661,34 @@ and eval_defs = function
         eval_stmt_list ~scope:fname
           ~args:(create_arg_idx ~args_string:args ())
           ~locals:(create_arg_idx ~args_string:locals ())
-          stmt_list
+          ~functype:ftype stmt_list
         |> Pstring.concat
       in
-      match ftype with
-      | Near ->
-          let header = if is_global then [ Global [ fname ] ] else []
-          and text_begin =
-            [
-              LabelDef (false, fname);
-              Comment (true, "Near");
-              Comment (true, Printf.sprintf "Args: %s" (String.concat "," args));
-              Comment
-                (true, Printf.sprintf "Locals: %s" (String.concat "," locals));
-              Push (Word, Register BP);
-              Mov (Word, Register BP, Register SP);
-              Newline;
-            ]
-          and text_end = [ Newline; Pop (Word, Register BP); Retn ] in
-          [
-            Pstring.create ~header ~text:text_begin ();
-            stmt_list_pstring;
-            Pstring.create ~text:text_end ();
-          ])
+      let header = if is_global then [ Global [ fname ] ] else []
+      and text_begin =
+        [
+          LabelDef (false, fname);
+          (match ftype with
+          | Near -> Comment (true, "Near")
+          | Far -> Comment (true, "Far"));
+          Comment (true, Printf.sprintf "Args: %s" (String.concat "," args));
+          Comment (true, Printf.sprintf "Locals: %s" (String.concat "," locals));
+          Push (Word, Register BP);
+          Mov (Word, Register BP, Register SP);
+          Newline;
+        ]
+      and text_end =
+        [
+          Newline;
+          Pop (Word, Register BP);
+          (match ftype with Near -> Retn | Far -> Retf);
+        ]
+      in
+      [
+        Pstring.create ~header ~text:text_begin ();
+        stmt_list_pstring;
+        Pstring.create ~text:text_end ();
+      ]
   | StaticVarUninitialized { is_global; stype; sname } ->
       let header = if is_global then [ Global [ sname ] ] else []
       and mnemo = match stype with Byte -> Resb 1 | Word -> Resw 1 in

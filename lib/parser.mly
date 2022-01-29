@@ -122,6 +122,7 @@ defs:
 
 function_type:
   | NEAR { Near }
+  | FAR { Far }
 
 size_type:
   | BYTE { Byte }
