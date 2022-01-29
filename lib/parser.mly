@@ -14,7 +14,13 @@
     args : string list;
   }
 
-  let func_list : func_item BatDynArray.t = BatDynArray.create ()
+  let func_list : func_item BatDynArray.t = BatDynArray.of_list [ 
+    { 
+      name = "";
+      args = [];
+      locals = BatDynArray.create ();
+    } 
+  ]
 
   let is_top_name_redef label =
     let is_same_name func = 
