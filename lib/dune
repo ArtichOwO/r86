@@ -1,6 +1,6 @@
 (library
  (name r86)
- (libraries uuidm batteries)
+ (libraries uuidm batteries core)
  (modules_without_implementation asm_types ast_types))
 
 (ocamllex lexer)

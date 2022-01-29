@@ -21,8 +21,12 @@ let to_string { header; text; data; rodata; bss } =
   |> String.concat "\n"
 
 let headers =
+  let now =
+    Core.Time.format (Core.Time.now ()) "%Y-%m-%d %H:%M:%S"
+      ~zone:Core.Time.Zone.utc
+  in
   {
-    header = [ Comment (false, Sys.argv.(1)); Bits 16; Newline ];
+    header = [ Comment (false, now); Bits 16; Newline ];
     text = [ Section ".text"; Newline ];
     data = [ Section ".data"; Newline ];
     rodata = [ Section ".rodata"; Newline ];
