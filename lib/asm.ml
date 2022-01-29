@@ -16,7 +16,7 @@ module Static = struct
             match c with
             | '\x00' -> "0,"
             | '\x20' .. '\x7E' as c -> sprintf "\'%c\'," c
-            | _ as c -> Char.code c |> sprintf "0x%x,"
+            | _ -> Char.code c |> sprintf "0x%x,"
           in
           new_char ^ others
         in
