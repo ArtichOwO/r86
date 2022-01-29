@@ -17,7 +17,7 @@ dune build
 # Build & run
 dune exec bin/main.exe -- example.86s
 ```
-r86 also require [nasm](https://www.nasm.us) to compile its generated assembly.
+r86 also requires [nasm](https://www.nasm.us) to compile its generated assembly.
 
 ## Features
 r86 aims to ease programming of real mode executables, with a syntax similar to C.  
