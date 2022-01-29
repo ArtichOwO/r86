@@ -13,14 +13,18 @@ module Pointer = struct
             if List.mem_assoc v args then
               let offset = List.assoc v args in
               [
-                Mov (Word, Register AX, Register BP);
-                Add (Register AX, OpInt ((offset * 2) + 4));
+                Mov
+                  ( Word,
+                    Register AX,
+                    MemnPos (Register BP, OpInt ((offset * 2) + 4)) );
               ]
             else if List.mem_assoc v locals then
               let offset = List.assoc v locals in
               [
-                Mov (Word, Register AX, Register BP);
-                Sub (Register AX, OpInt ((offset * 2) + 2));
+                Mov
+                  ( Word,
+                    Register AX,
+                    MemnNeg (Register BP, OpInt ((offset * 2) + 2)) );
               ]
             else [ Mov (Word, Register AX, OpLabel v) ]
           in
