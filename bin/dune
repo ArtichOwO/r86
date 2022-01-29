@@ -1,4 +1,4 @@
 (executable
- (public_name ArtiLang)
+ (public_name r86)
  (name main)
- (libraries ArtiLang core))
+ (libraries r86 core))

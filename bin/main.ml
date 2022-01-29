@@ -1,4 +1,4 @@
-open ArtiLang
+open R86
 
 let () =
   if Array.length Sys.argv == 2 then

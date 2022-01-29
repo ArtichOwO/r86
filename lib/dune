@@ -1,5 +1,5 @@
 (library
- (name ArtiLang)
+ (name r86)
  (libraries uuidm batteries)
  (modules_without_implementation asm_types ast_types))
 
