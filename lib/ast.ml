@@ -291,22 +291,19 @@ and eval_stmt ~scope ~args ~locals pstmt =
             ]
           ();
       ]
-      @ (match condition with
-        | Some condition_expr ->
-            [
-              eval_expr ~scope ~args ~locals condition_expr;
-              Pstring.create
-                ~text:
-                  [
-                    Cmp (Word, Register AX, OpInt 0);
-                    (if is_while then
-                     Jz (OpLabel (Printf.sprintf "%s.end" new_scope))
-                    else Jnz (OpLabel (Printf.sprintf "%s.end" new_scope)));
-                    Newline;
-                  ]
-                ();
-            ]
-        | None -> [])
+      @ [
+          eval_expr ~scope ~args ~locals condition;
+          Pstring.create
+            ~text:
+              [
+                Cmp (Word, Register AX, OpInt 0);
+                (if is_while then
+                 Jz (OpLabel (Printf.sprintf "%s.end" new_scope))
+                else Jnz (OpLabel (Printf.sprintf "%s.end" new_scope)));
+                Newline;
+              ]
+            ();
+        ]
       @ eval_stmt_list ~scope ~args ~locals sl
       @ [
           Pstring.create

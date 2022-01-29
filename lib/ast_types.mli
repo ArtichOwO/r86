@@ -28,7 +28,7 @@ and stmt =
   | If of expr * stmt list
   | IfElse of expr * stmt list * stmt list
   | For of stmt option * expr option * stmt option * stmt list
-  | WhileUntil of expr option * bool * stmt list
+  | WhileUntil of expr * bool * stmt list
   | LocalVar of string * expr
   | Assignment of address_value * expr * size_type
   | SubAssignment of address_value * offset_value * expr * size_type
