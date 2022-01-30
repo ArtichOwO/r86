@@ -243,8 +243,18 @@ value:
     { if not @@ is_loc_name_redef v 
       then raise @@ Exceptions.Label_not_defined v;
       Variable v }
-  | address=address_value;LBRACK;offset=offset_value;RBRACK { Subscript (address,offset) }
-  | ASTERISK;address=address_value { Subscript (address,(IntegerOffset 0)) }
+  | st=option(size_type);address=address_value;LBRACK;offset=offset_value;RBRACK 
+    { let stype = match st with
+      | None -> Word
+      | Some stype -> stype 
+      in
+      Subscript (stype,address,offset) }
+  | st=option(size_type);ASTERISK;address=address_value 
+    { let stype = match st with
+      | None -> Word
+      | Some stype -> stype 
+      in 
+      Subscript (stype,address,(IntegerOffset 0)) }
   | TRUE { Integer 1 }
   | FALSE { Integer 0 }
   | NULL { Integer 0 }
@@ -285,8 +295,11 @@ array_item:
 operation:
   | i=INTEGER { OperationInt i }
   | v=LABEL { OperationVar v }
-  | LPAREN;ASTERISK;address=address_value;RPAREN 
-    { OperationSubscript (address, IntegerOffset 0) }
+  | LPAREN;st=option(size_type);ASTERISK;address=address_value;RPAREN 
+    { let stype = match st with
+      | None -> Word
+      | Some stype -> stype in
+      OperationSubscript (stype, address, IntegerOffset 0) }
   | PLUS { OperationAdd }
   | ASTERISK { OperationMul }
   | HYPHEN { OperationSub }

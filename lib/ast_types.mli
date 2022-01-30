@@ -56,7 +56,7 @@ and size_type = Byte | Word
 and value =
   | Integer of int
   | Variable of string
-  | Subscript of address_value * offset_value
+  | Subscript of size_type * address_value * offset_value
   | String of string
 
 and offset_value = IntegerOffset of int | VariableOffset of string
@@ -78,7 +78,7 @@ and arguments = string * int
 and operation =
   | OperationInt of int
   | OperationVar of string
-  | OperationSubscript of address_value * offset_value
+  | OperationSubscript of size_type * address_value * offset_value
   | OperationAdd
   | OperationSub
   | OperationMul

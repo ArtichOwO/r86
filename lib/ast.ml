@@ -106,17 +106,24 @@ module Variable = struct
 end
 
 module Subscript = struct
-  let to_pstring ~args ~locals ~functype address offset =
+  let to_pstring ~args ~locals ~functype stype address offset =
     let address_pstring =
       Pointer.to_pstring ~args ~locals ~functype ~segment:(Register DS) address
+    and dst_reg =
+      match stype with Byte -> Register AL | Word -> Register AX
     in
     match offset with
     | IntegerOffset i ->
+        let offset = match stype with Byte -> i | Word -> i * 2 in
         let text_begin = [ Comment (true, "SUBSCRIPT") ]
         and text_end =
           [
             Mov (Word, Register SI, Register AX);
-            Mov (Word, Register AX, MemfPos (Register ES, Register SI, OpInt i));
+            (match stype with
+            | Byte -> Xor (Register AH, Register AH)
+            | Word -> Newline);
+            Mov
+              (stype, dst_reg, MemfPos (Register ES, Register SI, OpInt offset));
             Comment (true, "END SUBSCRIPT");
           ]
         in
@@ -131,11 +138,12 @@ module Subscript = struct
         and text_between = [ Mov (Word, Register SI, Register AX) ]
         and text_end =
           [
+            (match stype with Byte -> Newline | Word -> Mul (OpInt 2));
             Mov (Word, Register BX, Register AX);
-            Mov
-              ( Word,
-                Register AX,
-                MemfPos (Register ES, Register SI, Register BX) );
+            (match stype with
+            | Byte -> Xor (Register AH, Register AH)
+            | Word -> Newline);
+            Mov (stype, dst_reg, MemfPos (Register ES, Register SI, Register BX));
             Comment (true, "END SUBSCRIPT");
           ]
         in
@@ -582,10 +590,10 @@ and eval_expr ~scope ~args ~locals ~functype pexpr : Pstring.t =
                   Push (Word, Register AX);
                 ]
               ()
-        | OperationSubscript (address, offset) ->
+        | OperationSubscript (stype, address, offset) ->
             [
               Pstring.create ~text:[ Comment (true, "SUBSCRIPT") ] ();
-              Subscript.to_pstring ~args ~locals ~functype address offset;
+              Subscript.to_pstring ~args ~locals ~functype stype address offset;
               Pstring.create ~text:[ Push (Word, Register AX) ] ();
             ]
             |> Pstring.concat
@@ -630,8 +638,8 @@ and eval_value ~args ~locals ~functype value : Pstring.t =
       let text = [ Mov (Word, Register AX, OpInt i) ] in
       Pstring.create ~text ()
   | Variable var -> Variable.to_pstring var ~args ~locals
-  | Subscript (address, offset) ->
-      Subscript.to_pstring ~args ~locals ~functype address offset
+  | Subscript (stype, address, offset) ->
+      Subscript.to_pstring ~args ~locals ~functype stype address offset
   | String s ->
       let id =
         let replace_char = function '-' -> '_' | _ as c -> c in
