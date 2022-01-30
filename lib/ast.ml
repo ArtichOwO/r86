@@ -730,7 +730,7 @@ and eval_defs = function
                 in
                 let string_name = Printf.sprintf "string_%s" id in
                 mnemo
-                  ( d_values @ [ Db (StaticLabel string_name) ],
+                  ( d_values @ [ Dw (StaticLabel string_name) ],
                     d_strings @ [ LabelDef (false, string_name); Db hd ] )
                   tl
             | _ ->
