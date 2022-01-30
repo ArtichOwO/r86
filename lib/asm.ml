@@ -9,6 +9,7 @@ end
 module Static = struct
   let to_string = function
     | StaticInteger i -> sprintf "0x%x" i
+    | StaticLabel l -> l
     | StaticString s ->
         let explode s = List.init (String.length s) (String.get s) in
         let convert_char c others =

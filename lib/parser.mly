@@ -115,9 +115,30 @@ defs:
         (match stype with
         | Word -> raise Exceptions.String_as_words
         | _ -> ())
+      | StaticLabel _ -> ()
       end;
       let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
       StaticVar { is_global; stype; sname; value } }
+  | ig=option(GLOBAL);stype=size_type;sname=LABEL;ASSIGN;LBRACE;values=array_item+;RBRACE
+    { if is_top_name_redef sname 
+      then raise @@ Exceptions.Label_redefinition sname
+      else BatDynArray.add func_list { name=sname; args=[]; locals=(BatDynArray.create ())};
+      let rec check_if_correct lst =
+        match lst with
+        | [] -> ()
+        | hd::tl -> (match hd with
+          | StaticInteger i ->
+            (match stype with
+            | Byte -> if i > 0xFF then raise Exceptions.Integer_overflow
+            | Word -> if i > 0xFFFF then raise Exceptions.Integer_overflow)
+          | StaticString _ -> 
+            (match stype with
+            | Byte -> raise Exceptions.Pointer_overflow
+            | _ -> ())
+          | StaticLabel _ -> ()); check_if_correct tl;
+      in check_if_correct values;
+      let is_global = Option.fold ~none:false ~some:(fun _ -> true) ig in
+      StaticArray { is_global; stype; sname; values } }
   | EXTERN;externl=argument+ 
     { let is_same_name_map label =
         if is_top_name_redef label 
@@ -253,6 +274,13 @@ address_operand:
 static_value:
   | i=INTEGER { StaticInteger i }
   | s=STRING { StaticString s }
+
+array_static_value:
+  | i=INTEGER { StaticInteger i }
+  | s=STRING { StaticString s }
+
+array_item:
+  | v=array_static_value;option(COMMA) { v }
 
 operation:
   | i=INTEGER { OperationInt i }

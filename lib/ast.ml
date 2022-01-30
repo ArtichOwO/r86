@@ -697,6 +697,37 @@ and eval_defs = function
       let header = if is_global then [ Global [ sname ] ] else []
       and mnemo = match stype with Byte -> Db value | Word -> Dw value in
       [ Pstring.create ~header ~data:[ LabelDef (false, sname); mnemo ] () ]
+  | StaticArray { is_global; stype; sname; values } ->
+      let header = if is_global then [ Global [ sname ] ] else [] in
+      let rec mnemo (d_values, d_strings) svalues =
+        match svalues with
+        | [] -> d_values @ d_strings
+        | hd :: tl -> (
+            match hd with
+            | StaticString _ ->
+                let id =
+                  let replace_char = function '-' -> '_' | _ as c -> c in
+                  Uuidm.v4_gen (Random.State.make_self_init ()) ()
+                  |> Uuidm.to_string ~upper:true
+                  |> String.map replace_char
+                in
+                let string_name = Printf.sprintf "string_%s" id in
+                mnemo
+                  ( d_values @ [ Db (StaticLabel string_name) ],
+                    d_strings @ [ LabelDef (false, string_name); Db hd ] )
+                  tl
+            | _ ->
+                mnemo
+                  ( d_values
+                    @ [ (match stype with Byte -> Db hd | Word -> Dw hd) ],
+                    d_strings )
+                  tl)
+      in
+      [
+        Pstring.create ~header
+          ~data:([ LabelDef (false, sname) ] @ mnemo ([], []) values)
+          ();
+      ]
   | Extern extern_list ->
       let header = [ Extern extern_list ] in
       [ Pstring.create ~header () ]

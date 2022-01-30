@@ -21,6 +21,12 @@ and defs =
       sname : string;
       value : static_value;
     }
+  | StaticArray of {
+      is_global : bool;
+      stype : size_type;
+      sname : string;
+      values : static_value list;
+    }
   | Extern of string list
 
 and label = string
@@ -62,7 +68,10 @@ and address_value =
 
 and address_operand = IntegerAddressOp of int | VariableAddressOp of string
 
-and static_value = StaticInteger of int | StaticString of string
+and static_value =
+  | StaticInteger of int
+  | StaticString of string
+  | StaticLabel of string
 
 and arguments = string * int
 
