@@ -138,17 +138,16 @@ module Subscript = struct
         and text_between = [ Mov (Word, Register SI, Register AX) ]
         and text_end =
           [
-              (match stype with
-              | Byte -> Newline
-              | Word -> Add (Register AX, Register AX));
-              Mov (Word, Register BX, Register AX);
-              (match stype with
-              | Byte -> Xor (Register AH, Register AH)
-              | Word -> Newline);
-              Mov
-                (stype, dst_reg, MemfPos (Register ES, Register SI, Register BX));
-              Comment (true, "END SUBSCRIPT");
-            ]
+            (match stype with
+            | Byte -> Newline
+            | Word -> Add (Register AX, Register AX));
+            Mov (Word, Register BX, Register AX);
+            (match stype with
+            | Byte -> Xor (Register AH, Register AH)
+            | Word -> Newline);
+            Mov (stype, dst_reg, MemfPos (Register ES, Register SI, Register BX));
+            Comment (true, "END SUBSCRIPT");
+          ]
         in
         [
           Pstring.create ~text:text_begin ();
