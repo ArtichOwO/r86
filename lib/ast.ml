@@ -332,13 +332,14 @@ and eval_stmt ~scope ~args ~locals ~functype pstmt =
   | LocalVar (_, expr) ->
       let text = [ Push (Word, Register AX) ] in
       [ eval_expr ~scope ~args ~locals ~functype expr; Pstring.create ~text () ]
-  | Assignment (address, expr, stype) ->
-      let dest_reg =
-        match stype with Byte -> Register AL | Word -> Register AX
-      in
+  | Assignment (stype, address, expr) ->
       let address_text = [ Mov (Word, Register DI, Register AX) ]
       and expr_text =
-        [ Mov (stype, Memf (Register ES, Register DI), dest_reg) ]
+        [
+          (match stype with
+          | Byte -> Mov (Byte, Memf (Register ES, Register DI), Register AL)
+          | Word -> Mov (Word, Memf (Register ES, Register DI), Register AX));
+        ]
       in
       [
         Pointer.to_pstring address ~args ~locals ~functype
@@ -347,11 +348,14 @@ and eval_stmt ~scope ~args ~locals ~functype pstmt =
         eval_expr ~scope ~args ~locals ~functype expr;
         Pstring.create ~text:expr_text ();
       ]
-  | SubAssignment (address, offset, expr, stype) ->
-      let dest_reg =
-        match stype with Byte -> Register AL | Word -> Register AX
-      in
+  | SubAssignment (stype, address, offset, expr) ->
       let text_begin = [ Comment (true, "SUBSCRIPT ASSIGN") ]
+      and text_expr =
+        [
+          (match stype with
+          | Byte -> Mov (Byte, Register DL, Register AL)
+          | Word -> Mov (Word, Register DX, Register AX));
+        ]
       and text_between = [ Mov (Word, Register SI, Register AX) ]
       and ptext_end =
         match offset with
@@ -362,7 +366,9 @@ and eval_stmt ~scope ~args ~locals ~functype pstmt =
                   Mov
                     ( stype,
                       MemfPos (Register ES, Register SI, OpInt i),
-                      dest_reg );
+                      match stype with
+                      | Byte -> Register DL
+                      | Word -> Register DX );
                   Comment (true, "END SUBSCRIPT ASSIGN");
                   Newline;
                 ]
@@ -377,7 +383,9 @@ and eval_stmt ~scope ~args ~locals ~functype pstmt =
                     Mov
                       ( stype,
                         MemfPos (Register ES, Register SI, Register BX),
-                        dest_reg );
+                        match stype with
+                        | Byte -> Register DL
+                        | Word -> Register DX );
                     Comment (true, "END SUBSCRIPT ASSIGN");
                     Newline;
                   ]
@@ -387,10 +395,11 @@ and eval_stmt ~scope ~args ~locals ~functype pstmt =
       in
       [
         Pstring.create ~text:text_begin ();
+        eval_expr ~scope ~args ~locals ~functype expr;
+        Pstring.create ~text:text_expr ();
         Pointer.to_pstring address ~args ~locals ~functype
           ~segment:(Register DS);
         Pstring.create ~text:text_between ();
-        eval_expr ~scope ~args ~locals ~functype expr;
         ptext_end;
       ]
   | FuncCall (func, el) ->
@@ -430,7 +439,7 @@ and eval_stmt ~scope ~args ~locals ~functype pstmt =
 and eval_expr ~scope ~args ~locals ~functype pexpr : Pstring.t =
   match pexpr with
   | Value v -> eval_value ~args ~locals ~functype v
-  | N_Eq (is_eq, st, lv, rv) ->
+  | N_Eq (is_eq, lv, rv) ->
       let id =
         let replace_char = function '-' -> '_' | _ as c -> c in
         Uuidm.v4_gen (Random.State.make_self_init ()) ()
@@ -440,9 +449,6 @@ and eval_expr ~scope ~args ~locals ~functype pexpr : Pstring.t =
       let new_scope =
         if is_eq then Printf.sprintf "%s.eq%s" scope id
         else Printf.sprintf "%s.neq%s" scope id
-      and a_dst_reg = match st with Byte -> Register AL | Word -> Register AX
-      and b_dst_reg =
-        match st with Byte -> Register BL | Word -> Register BX
       in
       let text_begin =
         [
@@ -451,10 +457,10 @@ and eval_expr ~scope ~args ~locals ~functype pexpr : Pstring.t =
               if is_eq then Printf.sprintf "EQ<%s>" id
               else Printf.sprintf "NEQ<%s>" id );
         ]
-      and text_left_value = [ Mov (st, b_dst_reg, a_dst_reg) ]
+      and text_left_value = [ Mov (Word, Register BX, Register AX) ]
       and text_end =
         [
-          Cmp (st, b_dst_reg, a_dst_reg);
+          Cmp (Word, Register BX, Register AX);
           (if is_eq then Jne (OpLabel (Printf.sprintf "%s.false" new_scope))
           else Je (OpLabel (Printf.sprintf "%s.false" new_scope)));
           LabelDef (true, Printf.sprintf "%s.true" new_scope);

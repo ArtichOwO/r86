@@ -37,15 +37,15 @@ and stmt =
   | For of stmt option * expr option * stmt option * stmt list
   | WhileUntil of expr * bool * stmt list
   | LocalVar of string * expr
-  | Assignment of address_value * expr * size_type
-  | SubAssignment of address_value * offset_value * expr * size_type
+  | Assignment of size_type * address_value * expr
+  | SubAssignment of size_type * address_value * offset_value * expr
   | FuncCall of address_value * expr list
   | InlineASM of string list
   | Return of expr
 
 and expr =
   | Value of value
-  | N_Eq of bool * size_type * value * value
+  | N_Eq of bool * value * value
   | Operations of operation list
   | FuncCallExpr of address_value * expr list
 

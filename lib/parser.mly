@@ -195,36 +195,52 @@ stmt:
       then raise @@ Exceptions.Label_redefinition l
       else BatDynArray.add current_func.locals l;
       LocalVar (l, f) }
-  | l=address_value;ASSIGN;t=option(size_type);e=expr 
-    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
-      Assignment (l,e,st) }
-  | l=address_value;ASSIGN;t=option(size_type);e=funccall 
-    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
-      Assignment (l,e,st) }
-  | l=address_value;LBRACK;o=offset_value;RBRACK;ASSIGN;t=option(size_type);e=expr
-    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
-      SubAssignment (l,o,e,st) }
-  | l=address_value;LBRACK;o=offset_value;RBRACK;ASSIGN;t=option(size_type);e=funccall
-    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
-      SubAssignment (l,o,e,st) }
-  | ASTERISK;l=address_value;ASSIGN;t=option(size_type);e=expr
-    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
-      SubAssignment (l,(IntegerOffset 0),e,st) }
-  | ASTERISK;l=address_value;ASSIGN;t=option(size_type);e=funccall
-    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in
-      SubAssignment (l,(IntegerOffset 0),e,st) }
+  | st=option(size_type);l=address_value;ASSIGN;e=expr 
+    { let stype = match st with
+        | None -> Word
+        | Some stype -> stype
+      in
+      Assignment (stype,l,e) }
+  | st=option(size_type);l=address_value;ASSIGN;e=funccall 
+    { let stype = match st with
+        | None -> Word
+        | Some stype -> stype
+      in
+      Assignment (stype,l,e) }
+  | st=option(size_type);l=address_value;LBRACK;o=offset_value;RBRACK;ASSIGN;e=expr
+    { let stype = match st with
+        | None -> Word
+        | Some stype -> stype
+      in
+      SubAssignment (stype,l,o,e) }
+  | st=option(size_type);l=address_value;LBRACK;o=offset_value;RBRACK;ASSIGN;e=funccall
+    { let stype = match st with
+        | None -> Word
+        | Some stype -> stype
+      in
+      SubAssignment (stype,l,o,e) }
+  | st=option(size_type);ASTERISK;l=address_value;ASSIGN;e=expr
+    { let stype = match st with
+        | None -> Word
+        | Some stype -> stype
+      in
+      SubAssignment (stype,l,(IntegerOffset 0),e) }
+  | st=option(size_type);ASTERISK;l=address_value;ASSIGN;e=funccall
+    { let stype = match st with
+        | None -> Word
+        | Some stype -> stype
+      in
+      SubAssignment (stype,l,(IntegerOffset 0),e) }
   | func=address_value;LPAREN;el=funccall_argument*;RPAREN
     { FuncCall (func, el) }
   | sl=ASM { InlineASM sl }
   | RETURN;e=expr { Return e }
 
 expr:
-  | LPAREN;t=option(size_type);lv=value;EQ;rv=value;RPAREN 
-    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in 
-      N_Eq (true,st,lv,rv) }
-  | LPAREN;t=option(size_type);lv=value;NEQ;rv=value;RPAREN 
-    { let st = Option.fold ~none:Word ~some:(fun st -> st) t in 
-      N_Eq (false,st,lv,rv) }
+  | LPAREN;lv=value;EQ;rv=value;RPAREN 
+    { N_Eq (true,lv,rv) }
+  | LPAREN;lv=value;NEQ;rv=value;RPAREN 
+    { N_Eq (false,lv,rv) }
   | v=value { Value v }
   | LPAREN;v=value;RPAREN { Value v }
   | LPAREN;opl=operation+;RPAREN { Operations opl }
@@ -300,6 +316,11 @@ operation:
       | None -> Word
       | Some stype -> stype in
       OperationSubscript (stype, address, IntegerOffset 0) }
+  | LPAREN;st=option(size_type);address=address_value;LBRACK;offset=offset_value;RBRACK;RPAREN 
+    { let stype = match st with
+      | None -> Word
+      | Some stype -> stype in
+      OperationSubscript (stype, address, offset) }
   | PLUS { OperationAdd }
   | ASTERISK { OperationMul }
   | HYPHEN { OperationSub }
