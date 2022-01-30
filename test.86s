@@ -1,0 +1,8 @@
+
+global near memset(segment, offset, value, size) {
+    until (word size == 0) {
+        *segment:offset = byte value
+        size = (size 1 -)
+        offset = (offset 1 +)
+    }
+}
