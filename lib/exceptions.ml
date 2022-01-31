@@ -19,3 +19,5 @@ exception String_as_words
 exception Label_redefinition of string
 
 exception Label_not_defined of string
+
+exception String_in_operation

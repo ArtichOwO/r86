@@ -287,18 +287,13 @@ array_item:
   | v=static_value;option(COMMA) { v }
 
 operation:
-  | i=INTEGER { OperationInt i }
-  | v=LABEL { OperationVar v }
-  | LPAREN;st=option(size_type);ASTERISK;address=address_value;RPAREN 
-    { let stype = match st with
-      | None -> Word
-      | Some stype -> stype in
-      OperationSubscript (stype, address, IntegerOffset 0) }
-  | LPAREN;st=option(size_type);address=address_value;LBRACK;offset=offset_value;RBRACK;RPAREN 
-    { let stype = match st with
-      | None -> Word
-      | Some stype -> stype in
-      OperationSubscript (stype, address, offset) }
+  | e=expr 
+    { match e with 
+      | Value v -> 
+        (match v with
+         | String _ -> raise @@ Exceptions.String_in_operation
+         | _ -> OperationExpr e)
+      | _ -> OperationExpr e }
   | PLUS { OperationAdd }
   | ASTERISK { OperationMul }
   | HYPHEN { OperationSub }

@@ -76,9 +76,7 @@ and static_value =
 and arguments = string * int
 
 and operation =
-  | OperationInt of int
-  | OperationVar of string
-  | OperationSubscript of size_type * address_value * offset_value
+  | OperationExpr of expr
   | OperationAdd
   | OperationSub
   | OperationMul

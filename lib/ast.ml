@@ -492,23 +492,6 @@ and eval_expr ~scope ~args ~locals ~functype pexpr : Pstring.t =
       |> Pstring.concat
   | Operations opl ->
       let pstring_of_operation = function
-        | OperationInt i ->
-            Pstring.create
-              ~text:
-                [
-                  Comment (true, Printf.sprintf "INT<%i>" i);
-                  Push (Word, OpInt i);
-                ]
-              ()
-        | OperationVar v ->
-            [
-              Pstring.create
-                ~text:[ Comment (true, Printf.sprintf "VAR<%s>" v) ]
-                ();
-              Variable.to_pstring ~args ~locals ~functype v;
-              Pstring.create ~text:[ Push (Word, Register AX) ] ();
-            ]
-            |> Pstring.concat
         | OperationAdd ->
             Pstring.create
               ~text:
@@ -607,13 +590,43 @@ and eval_expr ~scope ~args ~locals ~functype pexpr : Pstring.t =
                   Push (Word, Register AX);
                 ]
               ()
-        | OperationSubscript (stype, address, offset) ->
-            [
-              Pstring.create ~text:[ Comment (true, "SUBSCRIPT") ] ();
-              Subscript.to_pstring ~args ~locals ~functype stype address offset;
-              Pstring.create ~text:[ Push (Word, Register AX) ] ();
-            ]
-            |> Pstring.concat
+        | OperationExpr expr -> (
+            match expr with
+            | Value v -> (
+                match v with
+                | Integer i ->
+                    Pstring.create
+                      ~text:
+                        [
+                          Comment (true, Printf.sprintf "INT<%i>" i);
+                          Push (Word, OpInt i);
+                        ]
+                      ()
+                | Variable var ->
+                    [
+                      Pstring.create
+                        ~text:[ Comment (true, Printf.sprintf "VAR<%s>" var) ]
+                        ();
+                      Variable.to_pstring ~args ~locals ~functype var;
+                      Pstring.create ~text:[ Push (Word, Register AX) ] ();
+                    ]
+                    |> Pstring.concat
+                | Subscript (stype, address, offset) ->
+                    [
+                      Pstring.create ~text:[ Comment (true, "SUBSCRIPT") ] ();
+                      Subscript.to_pstring ~args ~locals ~functype stype address
+                        offset;
+                      Pstring.create ~text:[ Push (Word, Register AX) ] ();
+                    ]
+                    |> Pstring.concat
+                | _ -> Pstring.create ())
+            | _ ->
+                [
+                  Pstring.create ~text:[ Comment (true, "EXPR") ] ();
+                  eval_expr ~scope ~args ~locals ~functype expr;
+                  Pstring.create ~text:[ Push (Word, Register AX) ] ();
+                ]
+                |> Pstring.concat)
       in
       [ Pstring.create ~text:[ Comment (true, "OPERATIONS") ] () ]
       @ List.map pstring_of_operation opl
