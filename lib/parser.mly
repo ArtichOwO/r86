@@ -39,8 +39,6 @@
 %token COMMA
 %token EOF
 
-%token <string> MACRO
-
 %token LPAREN RPAREN
 %token LBRACE RBRACE
 %token LBRACK RBRACK
@@ -301,12 +299,8 @@ static_value:
   | i=INTEGER { StaticInteger i }
   | s=STRING { StaticString s }
 
-array_static_value:
-  | i=INTEGER { StaticInteger i }
-  | s=STRING { StaticString s }
-
 array_item:
-  | v=array_static_value;option(COMMA) { v }
+  | v=static_value;option(COMMA) { v }
 
 operation:
   | i=INTEGER { OperationInt i }
