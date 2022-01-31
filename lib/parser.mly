@@ -194,19 +194,7 @@ stmt_wo_semicolon:
       then raise @@ Exceptions.Label_redefinition l
       else BatDynArray.add current_func.locals l;
       LocalVar (l, v) }
-  | LET;l=LABEL;ASSIGN;f=funccall 
-    { let current_func = BatDynArray.last func_list in
-      if is_loc_name_redef l 
-      then raise @@ Exceptions.Label_redefinition l
-      else BatDynArray.add current_func.locals l;
-      LocalVar (l, f) }
   | st=option(size_type);l=address_value;ASSIGN;e=expr 
-    { let stype = match st with
-        | None -> Word
-        | Some stype -> stype
-      in
-      Assignment (stype,l,e) }
-  | st=option(size_type);l=address_value;ASSIGN;e=funccall 
     { let stype = match st with
         | None -> Word
         | Some stype -> stype
@@ -218,19 +206,7 @@ stmt_wo_semicolon:
         | Some stype -> stype
       in
       SubAssignment (stype,l,o,e) }
-  | st=option(size_type);l=address_value;LBRACK;o=offset_value;RBRACK;ASSIGN;e=funccall
-    { let stype = match st with
-        | None -> Word
-        | Some stype -> stype
-      in
-      SubAssignment (stype,l,o,e) }
   | st=option(size_type);ASTERISK;l=address_value;ASSIGN;e=expr
-    { let stype = match st with
-        | None -> Word
-        | Some stype -> stype
-      in
-      SubAssignment (stype,l,(IntegerOffset 0),e) }
-  | st=option(size_type);ASTERISK;l=address_value;ASSIGN;e=funccall
     { let stype = match st with
         | None -> Word
         | Some stype -> stype
@@ -249,6 +225,7 @@ expr:
   | v=value { Value v }
   | LPAREN;v=value;RPAREN { Value v }
   | LPAREN;opl=operation+;RPAREN { Operations opl }
+  | f=funccall { f }
   
 funccall:
   | func=address_value;LPAREN;el=funccall_argument*;RPAREN
