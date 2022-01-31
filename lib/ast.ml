@@ -20,7 +20,9 @@ module Pointer = struct
                       ( Register BP,
                         OpInt
                           ((offset * 2)
-                          + match functype with Near -> 4 | Far -> 6 | Int -> 8) ) );
+                          +
+                          match functype with Near -> 4 | Far -> 6 | Int -> 8)
+                      ) );
               ]
             else if List.mem_assoc v locals then
               let offset = List.assoc v locals in
@@ -57,7 +59,8 @@ module Pointer = struct
               Add
                 ( Register AX,
                   OpInt
-                    ((offset * 2) + match functype with Near -> 4 | Far -> 6 | Int -> 8) );
+                    ((offset * 2)
+                    + match functype with Near -> 4 | Far -> 6 | Int -> 8) );
             ]
           else if List.mem_assoc v locals then
             let offset = List.assoc v locals in
@@ -92,7 +95,13 @@ module Variable = struct
         let offset = List.assoc var args in
         [
           Mov
-            (Word, Register AX, MemnPos (Register BP, OpInt ((offset * 2) + match functype with Near -> 4 | Far -> 6 | Int -> 8)));
+            ( Word,
+              Register AX,
+              MemnPos
+                ( Register BP,
+                  OpInt
+                    ((offset * 2)
+                    + match functype with Near -> 4 | Far -> 6 | Int -> 8) ) );
         ]
       else if List.mem_assoc var locals then
         let offset = List.assoc var locals in
