@@ -49,7 +49,7 @@ and expr =
   | Operations of operation list
   | FuncCallExpr of address_value * expr list
 
-and function_type = Near | Far
+and function_type = Near | Far | Int
 
 and size_type = Byte | Word
 

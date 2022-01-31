@@ -49,6 +49,7 @@ and instruction =
   | Pop of size_type * operand
   | Retn
   | Retf
+  | Iret
   | Jmpn of operand
   | Jmpf of int * operand
   | Jne of operand

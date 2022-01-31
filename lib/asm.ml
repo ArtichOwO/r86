@@ -97,6 +97,7 @@ module Instruction = struct
           sprintf "    pop %s %s" (Size.to_string stype) (Operand.to_string op)
       | Retn -> "    retn"
       | Retf -> "    retf"
+      | Iret -> "    iret"
       | Jmpn address -> sprintf "    jmp %s" (Operand.to_string address)
       | Jmpf (segment, address) ->
           sprintf "    jmp 0x%x:%s" segment (Operand.to_string address)

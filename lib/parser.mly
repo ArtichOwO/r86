@@ -88,6 +88,9 @@ defs:
       let { is_global; ftype; fname; args } = fd 
       and locals = BatDynArray.to_list current.locals in
       FuncDef { is_global; ftype; fname; args; stmt_list; locals } }
+  | d=defs_wo_semicolon;SEMICOLON { d }
+
+defs_wo_semicolon:
   | ig=option(GLOBAL);stype=size_type;sname=LABEL
     { if is_top_name_redef sname 
       then raise @@ Exceptions.Label_redefinition sname
@@ -148,6 +151,7 @@ defs:
 function_type:
   | NEAR { Near }
   | FAR { Far }
+  | INT { Int }
 
 size_type:
   | BYTE { Byte }
@@ -169,12 +173,15 @@ func_decl: ig=option(GLOBAL);ftype=function_type;fname=LABEL;LPAREN;args=argumen
 stmt:
   | IF;i=expr;LBRACE;t=stmt*;RBRACE { If (i,t) }
   | IF;i=expr;LBRACE;t=stmt*;RBRACE;ELSE;LBRACE;f=stmt*;RBRACE { IfElse (i,t,f) }
-  | FOR;LPAREN;init=option(stmt);SEMICOLON;
+  | FOR;LPAREN;init=option(stmt_wo_semicolon);SEMICOLON;
     condition=option(expr);SEMICOLON;
-    inc=option(stmt);RPAREN;LBRACE;sl=stmt*;RBRACE 
+    inc=option(stmt_wo_semicolon);RPAREN;LBRACE;sl=stmt*;RBRACE 
     { For (init, condition, inc, sl) }
   | WHILE;condition=expr;LBRACE;sl=stmt*;RBRACE { WhileUntil (condition, true, sl) }
   | UNTIL;condition=expr;LBRACE;sl=stmt*;RBRACE { WhileUntil (condition, false, sl) }
+  | s=stmt_wo_semicolon;SEMICOLON { s }
+
+stmt_wo_semicolon:
   | LET;l=LABEL
     { let current_func = BatDynArray.last func_list in
       if is_loc_name_redef l 

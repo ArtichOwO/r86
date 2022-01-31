@@ -20,7 +20,7 @@ module Pointer = struct
                       ( Register BP,
                         OpInt
                           ((offset * 2)
-                          + match functype with Near -> 4 | Far -> 6) ) );
+                          + match functype with Near -> 4 | Far -> 6 | Int -> 8) ) );
               ]
             else if List.mem_assoc v locals then
               let offset = List.assoc v locals in
@@ -57,7 +57,7 @@ module Pointer = struct
               Add
                 ( Register AX,
                   OpInt
-                    ((offset * 2) + match functype with Near -> 4 | Far -> 6) );
+                    ((offset * 2) + match functype with Near -> 4 | Far -> 6 | Int -> 8) );
             ]
           else if List.mem_assoc v locals then
             let offset = List.assoc v locals in
@@ -86,13 +86,13 @@ module Pointer = struct
 end
 
 module Variable = struct
-  let to_pstring ~args ~locals var =
+  let to_pstring ~args ~locals ~functype var =
     let text =
       if List.mem_assoc var args then
         let offset = List.assoc var args in
         [
           Mov
-            (Word, Register AX, MemnPos (Register BP, OpInt ((offset * 2) + 4)));
+            (Word, Register AX, MemnPos (Register BP, OpInt ((offset * 2) + match functype with Near -> 4 | Far -> 6 | Int -> 8)));
         ]
       else if List.mem_assoc var locals then
         let offset = List.assoc var locals in
@@ -153,7 +153,7 @@ module Subscript = struct
           Pstring.create ~text:text_begin ();
           address_pstring;
           Pstring.create ~text:text_between ();
-          Variable.to_pstring v ~args ~locals;
+          Variable.to_pstring v ~args ~locals ~functype;
           Pstring.create ~text:text_end ();
         ]
         |> Pstring.concat
@@ -377,7 +377,7 @@ and eval_stmt ~scope ~args ~locals ~functype pstmt =
               ()
         | VariableOffset v ->
             [
-              Variable.to_pstring v ~args ~locals;
+              Variable.to_pstring v ~args ~locals ~functype;
               Pstring.create
                 ~text:
                   [
@@ -496,7 +496,7 @@ and eval_expr ~scope ~args ~locals ~functype pexpr : Pstring.t =
               Pstring.create
                 ~text:[ Comment (true, Printf.sprintf "VAR<%s>" v) ]
                 ();
-              Variable.to_pstring ~args ~locals v;
+              Variable.to_pstring ~args ~locals ~functype v;
               Pstring.create ~text:[ Push (Word, Register AX) ] ();
             ]
             |> Pstring.concat
@@ -645,7 +645,7 @@ and eval_value ~args ~locals ~functype value : Pstring.t =
   | Integer i ->
       let text = [ Mov (Word, Register AX, OpInt i) ] in
       Pstring.create ~text ()
-  | Variable var -> Variable.to_pstring var ~args ~locals
+  | Variable var -> Variable.to_pstring var ~args ~locals ~functype
   | Subscript (stype, address, offset) ->
       Subscript.to_pstring ~args ~locals ~functype stype address offset
   | String s ->
@@ -686,7 +686,8 @@ and eval_defs = function
           LabelDef (false, fname);
           (match ftype with
           | Near -> Comment (true, "Near")
-          | Far -> Comment (true, "Far"));
+          | Far -> Comment (true, "Far")
+          | Int -> Comment (true, "Interrupt"));
           Comment (true, Printf.sprintf "Args: %s" (String.concat "," args));
           Comment (true, Printf.sprintf "Locals: %s" (String.concat "," locals));
           Push (Word, Register BP);
@@ -697,7 +698,7 @@ and eval_defs = function
         [
           Newline;
           Pop (Word, Register BP);
-          (match ftype with Near -> Retn | Far -> Retf);
+          (match ftype with Near -> Retn | Far -> Retf | Int -> Iret);
         ]
       in
       [
