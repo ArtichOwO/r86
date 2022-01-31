@@ -252,7 +252,7 @@ funccall_argument:
 
 value:
   | i=INTEGER { Integer i }
-  | s=STRING { String s }
+  | s=STRING+ { String (String.concat "" s) }
   | v=LABEL 
     { if not @@ is_loc_name_redef v 
       then raise @@ Exceptions.Label_not_defined v;
@@ -297,7 +297,7 @@ address_operand:
 
 static_value:
   | i=INTEGER { StaticInteger i }
-  | s=STRING { StaticString s }
+  | s=STRING+ { StaticString (String.concat "" s) }
 
 array_item:
   | v=static_value;option(COMMA) { v }
