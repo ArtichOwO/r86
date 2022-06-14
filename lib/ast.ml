@@ -168,6 +168,11 @@ module Subscript = struct
         |> Pstring.concat
 end
 
+let gen_id () =
+  Uuidm.v4_gen (Random.State.make_self_init ()) ()
+  |> Uuidm.to_string ~upper:true
+  |> String.map (function '-' -> '_' | c -> c)
+
 let rec eval_stmt_list ~scope ~args ~locals ~functype stmt_list =
   let eval_stmt_scope = eval_stmt ~scope ~args ~locals ~functype in
   List.map eval_stmt_scope stmt_list |> List.flatten
@@ -175,12 +180,7 @@ let rec eval_stmt_list ~scope ~args ~locals ~functype stmt_list =
 and eval_stmt ~scope ~args ~locals ~functype pstmt =
   match pstmt with
   | If (e, sl) ->
-      let id =
-        let replace_char = function '-' -> '_' | _ as c -> c in
-        Uuidm.v4_gen (Random.State.make_self_init ()) ()
-        |> Uuidm.to_string ~upper:true
-        |> String.map replace_char
-      in
+      let id = gen_id () in
       let new_scope = Printf.sprintf "%s.if%s" scope id in
       let text_begin =
         [
@@ -207,12 +207,7 @@ and eval_stmt ~scope ~args ~locals ~functype pstmt =
       @ eval_stmt_list ~scope ~args ~locals ~functype sl
       @ [ Pstring.create ~text:text_end () ]
   | IfElse (e, t, f) ->
-      let id =
-        let replace_char = function '-' -> '_' | _ as c -> c in
-        Uuidm.v4_gen (Random.State.make_self_init ()) ()
-        |> Uuidm.to_string ~upper:true
-        |> String.map replace_char
-      in
+      let id = gen_id () in
       let new_scope = Printf.sprintf "%s.ifelse%s" scope id in
 
       let text_begin =
@@ -248,12 +243,7 @@ and eval_stmt ~scope ~args ~locals ~functype pstmt =
       @ eval_stmt_list ~scope ~args ~locals ~functype f
       @ [ Pstring.create ~text:text_end () ]
   | For (init, condition, inc, sl) ->
-      let id =
-        let replace_char = function '-' -> '_' | _ as c -> c in
-        Uuidm.v4_gen (Random.State.make_self_init ()) ()
-        |> Uuidm.to_string ~upper:true
-        |> String.map replace_char
-      in
+      let id = gen_id () in
       let new_scope = Printf.sprintf "%s.for%s" scope id in
 
       [
@@ -296,12 +286,7 @@ and eval_stmt ~scope ~args ~locals ~functype pstmt =
             ();
         ]
   | WhileUntil (condition, is_while, sl) ->
-      let id =
-        let replace_char = function '-' -> '_' | _ as c -> c in
-        Uuidm.v4_gen (Random.State.make_self_init ()) ()
-        |> Uuidm.to_string ~upper:true
-        |> String.map replace_char
-      in
+      let id = gen_id () in
       let new_scope =
         if is_while then Printf.sprintf "%s.while%s" scope id
         else Printf.sprintf "%s.until%s" scope id
@@ -451,12 +436,7 @@ and eval_expr ~scope ~args ~locals ~functype pexpr : Pstring.t =
   match pexpr with
   | Value v -> eval_value ~args ~locals ~functype v
   | N_Eq (is_eq, lv, rv) ->
-      let id =
-        let replace_char = function '-' -> '_' | _ as c -> c in
-        Uuidm.v4_gen (Random.State.make_self_init ()) ()
-        |> Uuidm.to_string ~upper:true
-        |> String.map replace_char
-      in
+      let id = gen_id () in
       let new_scope =
         if is_eq then Printf.sprintf "%s.eq%s" scope id
         else Printf.sprintf "%s.neq%s" scope id
@@ -671,12 +651,7 @@ and eval_value ~args ~locals ~functype value : Pstring.t =
   | Subscript (stype, address, offset) ->
       Subscript.to_pstring ~args ~locals ~functype stype address offset
   | String s ->
-      let id =
-        let replace_char = function '-' -> '_' | _ as c -> c in
-        Uuidm.v4_gen (Random.State.make_self_init ()) ()
-        |> Uuidm.to_string ~upper:true
-        |> String.map replace_char
-      in
+      let id = gen_id () in
       let sname = Printf.sprintf "string_%s" id in
       let text = [ Mov (Word, Register AX, OpLabel sname) ]
       and data = [ LabelDef (false, sname); Db (StaticString s) ] in
@@ -689,7 +664,7 @@ let rec eval_program defs_list =
 and eval_defs = function
   | FuncDef { is_global; ftype; fname; args; stmt_list; locals } ->
       let rec create_arg_idx ?(index = 0) ?(args_list = []) ~args_string () =
-        if List.length args_string = index then args_list
+        if List.compare_length_with args_string index = 0 then args_list
         else
           create_arg_idx ~index:(index + 1)
             ~args_list:(args_list @ [ (List.nth args_string index, index) ])
@@ -744,12 +719,7 @@ and eval_defs = function
         | hd :: tl -> (
             match hd with
             | StaticString _ ->
-                let id =
-                  let replace_char = function '-' -> '_' | _ as c -> c in
-                  Uuidm.v4_gen (Random.State.make_self_init ()) ()
-                  |> Uuidm.to_string ~upper:true
-                  |> String.map replace_char
-                in
+                let id = gen_id () in
                 let string_name = Printf.sprintf "string_%s" id in
                 mnemo
                   ( d_values @ [ Dw (StaticLabel string_name) ],

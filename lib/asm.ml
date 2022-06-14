@@ -8,22 +8,23 @@ end
 
 module Static = struct
   let to_string = function
-    | StaticInteger i -> sprintf "0x%x" i
+    | StaticInteger i -> sprintf "%#x" i
     | StaticLabel l -> l
     | StaticString s ->
-        let explode s = List.init (String.length s) (String.get s) in
-        let convert_char c others =
-          let new_char =
-            match c with
+        let convert_char buf chr =
+          Buffer.add_string buf
+            (match chr with
             | '\x00' -> "0,"
-            | '\'' -> "\"'\","
-            | '\x20' .. '\x7E' as c -> sprintf "\'%c\'," c
-            | _ -> Char.code c |> sprintf "0x%x,"
-          in
-          new_char ^ others
+            | '\'' -> sprintf "%S," "'"
+            | '\x20' .. '\x7E' -> sprintf "%C," chr
+            | _ -> sprintf "%#x," (Char.code chr));
+          buf
         in
-        let new_string = List.fold_right convert_char (explode s) "" in
-        sprintf "%s0" new_string
+        let buf =
+          Seq.fold_left convert_char (Buffer.create 101) (String.to_seq s)
+        in
+        Buffer.add_char buf '0';
+        Buffer.contents buf
 end
 
 module Operand = struct
@@ -63,18 +64,18 @@ module Operand = struct
     | MemfNeg (segment, address, offset) ->
         sprintf "[%s:%s-%s]" (to_string segment) (to_string address)
           (to_string offset)
-    | OpInt i -> sprintf "0x%x" i
+    | OpInt i -> sprintf "%#x" i
     | OpLabel l -> l
     | OpChar c ->
         let to_int base nc = Int.shift_left base 4 + Char.code nc in
         let integer = BatString.fold_left to_int 0 c in
-        sprintf "0x%x" integer
+        sprintf "%#x" integer
 end
 
 module Instruction = struct
   let to_string instr =
-    let instr_str =
-      match instr with
+    sprintf "%s\n"
+      (match instr with
       | Newline -> ""
       | Text t -> sprintf "    %s" t
       | Comment (indent, s) ->
@@ -131,7 +132,5 @@ module Instruction = struct
       | Callf (segment, address) ->
           sprintf "    call %s:%s"
             (Operand.to_string segment)
-            (Operand.to_string address)
-    in
-    sprintf "%s\n" instr_str
+            (Operand.to_string address))
 end
