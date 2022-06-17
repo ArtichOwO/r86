@@ -4,8 +4,9 @@
   </a>
 
   <h4 align="center">
-    r86 is a 8086 real mode programming language which supports segmentation
-  </p>
+    r86 is a 8086 real mode programming language which supports segmentation <br />
+    <i>It's still a WIP ∠( ᐛ 」∠)_	</i>
+  </h4>
 </div>
 
 ## Build
